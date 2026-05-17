@@ -24,9 +24,12 @@ export const COLOR_TYPES = 4;
 export const TARGET_PER_GATE = 3;        // need 3 of each color → 6 deliveries per round
 
 // Field NPC counts per round, scaled with round number.
-export const NPC_BASE_COUNT = 12;        // round 1
-export const NPC_PER_ROUND_BONUS = 1;    // +N per round, capped
-export const NPC_COUNT_CAP = 18;
+export const NPC_BASE_COUNT = 18;        // round 1 — more dancers on the floor
+                                         // so each of the 4 dye colors averages
+                                         // ~4-5 spawns and TARGET_PER_GATE = 3
+                                         // is always achievable on RNG.
+export const NPC_PER_ROUND_BONUS = 2;    // +N per round, capped
+export const NPC_COUNT_CAP = 28;
 
 // Wolves spawn count per round.
 export const WOLF_BASE_COUNT = 1;
@@ -53,7 +56,7 @@ export const GATE_SPREAD_X = 10;
 export const GRACE_PERIOD = 1.5;
 
 // Camera — identical setup to Penguin Rescue.
-export const CAMERA_POS: [number, number, number] = [0, 22, 9.4];
+export const CAMERA_POS: [number, number, number] = [0, 18, 7.6];
 export const CAMERA_FOV = 50;
 
 export const DYE_PALETTE = [

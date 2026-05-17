@@ -18,6 +18,8 @@ export function Wolf({ stunned = false }: WolfProps) {
   const lensMatL = useRef<THREE.MeshStandardMaterial>(null);
   const lensMatR = useRef<THREE.MeshStandardMaterial>(null);
   const earpieceMat = useRef<THREE.MeshStandardMaterial>(null);
+  const ringMatInner = useRef<THREE.MeshBasicMaterial>(null);
+  const ringMatOuter = useRef<THREE.MeshBasicMaterial>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -39,13 +41,29 @@ export function Wolf({ stunned = false }: WolfProps) {
       // earpiece pulses slowly so the bouncer reads as "on the radio"
       earpieceMat.current.emissiveIntensity = stunned ? 0 : 0.8 + Math.sin(t * 2.5) * 0.4;
     }
+    // "threat" ring under the bouncer — pulses red when active, fades to a
+    // dim warm-white when stunned so the visual state matches gameplay state.
+    const pulse = stunned ? 0 : 0.7 + (Math.sin(t * 3.2) + 1) * 0.25;
+    if (ringMatInner.current) ringMatInner.current.opacity = pulse;
+    if (ringMatOuter.current) ringMatOuter.current.opacity = pulse * 0.45;
   });
 
   return (
     <group>
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.78, 24]} />
+        <circleGeometry args={[0.85, 24]} />
         <meshBasicMaterial color="#000" transparent opacity={0.55} />
+      </mesh>
+      {/* "watch out" threat ring under the bouncer — red, pulses when active,
+          dims when stunned. Mirrors the DJ's cyan ring so the two characters
+          are immediately distinguishable as Player (cyan) vs Threat (red). */}
+      <mesh position={[0, 0.038, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.72, 0.92, 32]} />
+        <meshBasicMaterial ref={ringMatInner} color="#ff2030" transparent opacity={0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh position={[0, 0.033, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.92, 1.18, 32]} />
+        <meshBasicMaterial ref={ringMatOuter} color="#ff2030" transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} />
       </mesh>
       <group ref={bounceRef}>
         {/* lower torso — broad dark suit pants */}
