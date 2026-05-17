@@ -7,101 +7,154 @@ interface WolfProps {
   stunned?: boolean;
 }
 
-// Grey lean canine — predator silhouette distinct from the sheepdog: taller,
-// thinner, no white markings, glowing yellow eyes when not stunned.
+// Bouncer (replaces the wolf). Full character: bulky suited body, neon vest
+// trim across the chest, dark head + white-bar sunglasses, earpiece coiled to
+// the shoulder, arms folded across the chest. Stands taller than a dancer so
+// the silhouette pops in a crowd. When stunned by a MIC DROP, the head tilts
+// back, arms drop, and stun stars spin above.
 export function Wolf({ stunned = false }: WolfProps) {
   const bounceRef = useRef<THREE.Group>(null);
-  const tailRef = useRef<THREE.Mesh>(null);
-  const eyeMatL = useRef<THREE.MeshStandardMaterial>(null);
-  const eyeMatR = useRef<THREE.MeshStandardMaterial>(null);
+  const armsRef = useRef<THREE.Group>(null);
+  const lensMatL = useRef<THREE.MeshStandardMaterial>(null);
+  const lensMatR = useRef<THREE.MeshStandardMaterial>(null);
+  const earpieceMat = useRef<THREE.MeshStandardMaterial>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (bounceRef.current) {
-      bounceRef.current.position.y = stunned ? -0.04 : Math.abs(Math.sin(t * 9)) * 0.20;
-      bounceRef.current.rotation.z = stunned ? 0.35 : Math.sin(t * 9) * 0.05;
+      bounceRef.current.position.y = stunned ? -0.04 : Math.abs(Math.sin(t * 6)) * 0.10;
+      bounceRef.current.rotation.z = stunned ? 0.32 : Math.sin(t * 6) * 0.03;
     }
-    if (tailRef.current) {
-      tailRef.current.rotation.y = stunned ? 0 : Math.sin(t * 10) * 0.4;
+    // when stunned, arms slump
+    if (armsRef.current) {
+      const target = stunned ? -0.7 : 0;
+      armsRef.current.rotation.x += (target - armsRef.current.rotation.x) * 0.18;
     }
-    if (eyeMatL.current && eyeMatR.current) {
-      const target = stunned ? 0 : 0.85;
-      eyeMatL.current.emissiveIntensity += (target - eyeMatL.current.emissiveIntensity) * 0.2;
-      eyeMatR.current.emissiveIntensity = eyeMatL.current.emissiveIntensity;
+    if (lensMatL.current && lensMatR.current) {
+      const target = stunned ? 0 : 0.5;
+      lensMatL.current.emissiveIntensity += (target - lensMatL.current.emissiveIntensity) * 0.2;
+      lensMatR.current.emissiveIntensity = lensMatL.current.emissiveIntensity;
+    }
+    if (earpieceMat.current) {
+      // earpiece pulses slowly so the bouncer reads as "on the radio"
+      earpieceMat.current.emissiveIntensity = stunned ? 0 : 0.8 + Math.sin(t * 2.5) * 0.4;
     }
   });
 
   return (
     <group>
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.7, 24]} />
-        <meshBasicMaterial color="#1c2014" transparent opacity={0.45} />
+        <circleGeometry args={[0.78, 24]} />
+        <meshBasicMaterial color="#000" transparent opacity={0.55} />
       </mesh>
       <group ref={bounceRef}>
-        {/* body — leaner than dog */}
-        <RoundedBox args={[0.72, 0.62, 1.55]} radius={0.26} smoothness={5}
-                    position={[0, 0.5, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color="#5a5650" roughness={0.85} />
+        {/* lower torso — broad dark suit pants */}
+        <RoundedBox args={[0.85, 0.55, 0.55]} radius={0.16} smoothness={5}
+                    position={[0, 0.4, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#0c0c14" roughness={0.9} />
         </RoundedBox>
-        {/* back ridge — darker stripe so it reads as a wolf */}
-        <RoundedBox args={[0.18, 0.55, 1.2]} radius={0.06} smoothness={4}
-                    position={[0, 0.78, 0]} castShadow>
-          <meshStandardMaterial color="#2e2a25" roughness={0.85} />
+        {/* upper torso — wide chest, suit jacket */}
+        <RoundedBox args={[1.05, 0.72, 0.6]} radius={0.18} smoothness={5}
+                    position={[0, 0.98, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#16161e" roughness={0.85} />
         </RoundedBox>
-        {/* head */}
-        <RoundedBox args={[0.48, 0.48, 0.6]} radius={0.18} smoothness={5}
-                    position={[0, 0.58, 0.92]} castShadow>
-          <meshStandardMaterial color="#4a4641" roughness={0.85} />
+        {/* vivid RED hi-vis vest trim — RED is intentionally OUTSIDE the dye
+            palette (which is pink/cyan/amber/lime) so a bouncer cannot be
+            confused for a pink-dye dancer or any other delivery target */}
+        <RoundedBox args={[1.08, 0.14, 0.62]} radius={0.04} smoothness={3}
+                    position={[0, 1.20, 0]} castShadow>
+          <meshStandardMaterial color="#ff2030" emissive="#ff2030" emissiveIntensity={1.3} roughness={0.4} />
         </RoundedBox>
-        {/* long muzzle */}
-        <RoundedBox args={[0.26, 0.24, 0.5]} radius={0.10} smoothness={4}
-                    position={[0, 0.48, 1.28]} castShadow>
-          <meshStandardMaterial color="#3a3631" roughness={0.85} />
+        {/* secondary vest stripe */}
+        <RoundedBox args={[1.08, 0.06, 0.62]} radius={0.02} smoothness={3}
+                    position={[0, 0.78, 0]}>
+          <meshStandardMaterial color="#ff2030" emissive="#ff2030" emissiveIntensity={0.95} roughness={0.4} />
         </RoundedBox>
-        {/* nose */}
-        <mesh position={[0, 0.52, 1.55]} castShadow>
-          <sphereGeometry args={[0.07, 12, 10]} />
-          <meshStandardMaterial color="#0a0a0a" />
+
+        {/* neck */}
+        <mesh position={[0, 1.45, 0]} castShadow>
+          <cylinderGeometry args={[0.14, 0.16, 0.16, 12]} />
+          <meshStandardMaterial color="#1a1a22" />
         </mesh>
-        {/* eyes — glowing yellow when active */}
-        <mesh position={[-0.12, 0.70, 1.20]} castShadow>
-          <sphereGeometry args={[0.060, 10, 10]} />
-          <meshStandardMaterial ref={eyeMatL} color="#ffdc4a" emissive="#ffa820" emissiveIntensity={0.8} />
+        {/* head — bigger than a dancer, shaved look */}
+        <mesh position={[0, 1.68, 0]} castShadow>
+          <sphereGeometry args={[0.32, 18, 14]} />
+          <meshStandardMaterial color="#1c1c24" roughness={0.7} />
         </mesh>
-        <mesh position={[ 0.12, 0.70, 1.20]} castShadow>
-          <sphereGeometry args={[0.060, 10, 10]} />
-          <meshStandardMaterial ref={eyeMatR} color="#ffdc4a" emissive="#ffa820" emissiveIntensity={0.8} />
+        {/* sunglasses — white horizontal bar across the eyes, sits forward */}
+        <RoundedBox args={[0.56, 0.13, 0.06]} radius={0.05} smoothness={3}
+                    position={[0, 1.70, 0.28]} castShadow>
+          <meshStandardMaterial color="#0a0a0e" metalness={0.4} roughness={0.25} />
+        </RoundedBox>
+        {/* mirror lenses — cool-white reflection catches club light without
+            using a dye color */}
+        <mesh position={[-0.13, 1.70, 0.32]}>
+          <boxGeometry args={[0.20, 0.10, 0.02]} />
+          <meshStandardMaterial ref={lensMatL} color="#0e0e14" emissive="#cfe0f0" emissiveIntensity={0.45} metalness={0.8} roughness={0.15} />
         </mesh>
-        {/* pointed ears */}
-        <mesh position={[-0.18, 0.94, 0.84]} rotation={[0.1, 0, -0.15]} castShadow>
-          <coneGeometry args={[0.10, 0.36, 4]} />
-          <meshStandardMaterial color="#3e3a35" />
+        <mesh position={[ 0.13, 1.70, 0.32]}>
+          <boxGeometry args={[0.20, 0.10, 0.02]} />
+          <meshStandardMaterial ref={lensMatR} color="#0e0e14" emissive="#cfe0f0" emissiveIntensity={0.45} metalness={0.8} roughness={0.15} />
         </mesh>
-        <mesh position={[ 0.18, 0.94, 0.84]} rotation={[0.1, 0,  0.15]} castShadow>
-          <coneGeometry args={[0.10, 0.36, 4]} />
-          <meshStandardMaterial color="#3e3a35" />
+        {/* earpiece — small pulsing dot at the right ear with a thin coil
+            running down to the shoulder */}
+        <mesh position={[0.30, 1.66, 0]} castShadow>
+          <sphereGeometry args={[0.05, 10, 8]} />
+          <meshStandardMaterial ref={earpieceMat} color="#fff" emissive="#fff5d8" emissiveIntensity={1.0} />
         </mesh>
-        {/* tail — long and bushy */}
-        <mesh ref={tailRef} position={[0, 0.55, -0.86]} castShadow>
-          <group>
-            <mesh position={[0, 0, -0.22]}>
-              <cylinderGeometry args={[0.07, 0.05, 0.5, 8]} />
-              <meshStandardMaterial color="#3e3a35" />
-            </mesh>
-            <mesh position={[0, 0, -0.50]}>
-              <sphereGeometry args={[0.13, 12, 10]} />
-              <meshStandardMaterial color="#5a5650" />
-            </mesh>
-          </group>
+        {/* earpiece coil — thin curved cylinder from ear to shoulder */}
+        <mesh position={[0.34, 1.45, 0.02]} rotation={[0, 0, -0.3]}>
+          <cylinderGeometry args={[0.014, 0.014, 0.38, 6]} />
+          <meshStandardMaterial color="#222229" />
         </mesh>
-        {/* legs */}
-        {([[-0.22, -0.55], [0.22, -0.55], [-0.22, 0.55], [0.22, 0.55]] as const).map(([x, z], i) => (
-          <mesh key={i} position={[x, 0.18, z]} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 0.36, 8]} />
-            <meshStandardMaterial color="#3a3631" roughness={0.85} />
+
+        {/* ARMS — folded across chest. Two stacked rounded boxes angled in.
+            Wrapped in a group so when stunned they slump downward together. */}
+        <group ref={armsRef} position={[0, 1.10, 0]}>
+          {/* upper arms (sleeves) */}
+          <mesh position={[-0.55, -0.05, 0.15]} rotation={[0, 0, -1.0]} castShadow>
+            <cylinderGeometry args={[0.13, 0.13, 0.52, 12]} />
+            <meshStandardMaterial color="#16161e" roughness={0.85} />
           </mesh>
-        ))}
-        {/* stun stars — three little spinning marks above the head when stunned */}
+          <mesh position={[ 0.55, -0.05, 0.15]} rotation={[0, 0,  1.0]} castShadow>
+            <cylinderGeometry args={[0.13, 0.13, 0.52, 12]} />
+            <meshStandardMaterial color="#16161e" roughness={0.85} />
+          </mesh>
+          {/* forearms folded over the chest (horizontal) */}
+          <RoundedBox args={[0.78, 0.18, 0.22]} radius={0.08} smoothness={3}
+                      position={[0, -0.05, 0.36]} castShadow>
+            <meshStandardMaterial color="#16161e" roughness={0.85} />
+          </RoundedBox>
+          {/* fists clenched at the wrists */}
+          <mesh position={[-0.32, -0.05, 0.43]} castShadow>
+            <sphereGeometry args={[0.11, 12, 10]} />
+            <meshStandardMaterial color="#2a2a35" roughness={0.85} />
+          </mesh>
+          <mesh position={[ 0.32, -0.05, 0.43]} castShadow>
+            <sphereGeometry args={[0.11, 12, 10]} />
+            <meshStandardMaterial color="#2a2a35" roughness={0.85} />
+          </mesh>
+        </group>
+
+        {/* legs — short, planted */}
+        <mesh position={[-0.20, 0.10, 0]} castShadow>
+          <cylinderGeometry args={[0.13, 0.13, 0.20, 10]} />
+          <meshStandardMaterial color="#08080e" roughness={0.85} />
+        </mesh>
+        <mesh position={[ 0.20, 0.10, 0]} castShadow>
+          <cylinderGeometry args={[0.13, 0.13, 0.20, 10]} />
+          <meshStandardMaterial color="#08080e" roughness={0.85} />
+        </mesh>
+        {/* shoes — polished black with a tiny highlight */}
+        <RoundedBox args={[0.28, 0.10, 0.36]} radius={0.05} smoothness={3}
+                    position={[-0.20, 0.02, 0.05]} castShadow>
+          <meshStandardMaterial color="#0a0a10" metalness={0.6} roughness={0.25} />
+        </RoundedBox>
+        <RoundedBox args={[0.28, 0.10, 0.36]} radius={0.05} smoothness={3}
+                    position={[ 0.20, 0.02, 0.05]} castShadow>
+          <meshStandardMaterial color="#0a0a10" metalness={0.6} roughness={0.25} />
+        </RoundedBox>
+
         {stunned && <StunStars />}
       </group>
     </group>
@@ -114,13 +167,13 @@ function StunStars() {
     if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 5;
   });
   return (
-    <group ref={ref} position={[0, 1.5, 0.5]}>
+    <group ref={ref} position={[0, 2.05, 0.4]}>
       {[0, 1, 2].map(i => {
         const a = (i / 3) * Math.PI * 2;
         return (
-          <mesh key={i} position={[Math.cos(a) * 0.35, Math.sin(a) * 0.1, Math.sin(a) * 0.35]}>
-            <sphereGeometry args={[0.07, 8, 8]} />
-            <meshStandardMaterial color="#ffd84a" emissive="#ffd84a" emissiveIntensity={1.0} />
+          <mesh key={i} position={[Math.cos(a) * 0.40, Math.sin(a) * 0.10, Math.sin(a) * 0.40]}>
+            <sphereGeometry args={[0.08, 8, 8]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.6} />
           </mesh>
         );
       })}

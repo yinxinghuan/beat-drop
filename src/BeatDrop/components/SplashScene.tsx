@@ -1,7 +1,9 @@
-// Pure SVG/CSS splash. No 3D canvas. Two-layer pastoral hill scene with
-// barn, tree clumps, sheep flock, and a sheepdog. Execution refined: better
-// curves, larger characters, layered foliage, proper barn proportions,
-// atmospheric perspective.
+// Beat Drop splash — dark club poster. Same structural slots as the Piper
+// splash (sky / halo / particles / floor plane / back layer / front layer /
+// content overlay) so the SplashScene.less hierarchy survives. Visuals are
+// retargeted: smoke-and-laser sky, spotlit DJ booth, crowd silhouettes,
+// neon barrier posts, "Beat Drop" wordmark.
+
 import { useState } from 'react';
 import { t } from '../i18n';
 
@@ -11,16 +13,19 @@ interface Puff {
   delay: number;
   duration: number;
   size: number;
+  hue: number;
 }
 
 export function SplashScene({ onStart, highScore }: { onStart: () => void; highScore: number }) {
+  // confetti/sparkles drifting up the screen — varied neon hues
   const [puffs] = useState<Puff[]>(() =>
-    Array.from({ length: 42 }, (_, i) => ({
+    Array.from({ length: 38 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       delay: -Math.random() * 18,
-      duration: 13 + Math.random() * 12,
-      size: 5 + Math.random() * 9,
+      duration: 12 + Math.random() * 12,
+      size: 4 + Math.random() * 7,
+      hue: Math.floor(Math.random() * 4), // pink / cyan / amber / lime
     }))
   );
 
@@ -33,7 +38,7 @@ export function SplashScene({ onStart, highScore }: { onStart: () => void; highS
         {puffs.map(f => (
           <div
             key={f.id}
-            className="bd-splash__puff"
+            className={`bd-splash__puff bd-splash__puff--h${f.hue}`}
             style={{
               left: `${f.x}%`,
               width: `${f.size}px`,
@@ -45,196 +50,187 @@ export function SplashScene({ onStart, highScore }: { onStart: () => void; highS
         ))}
       </div>
 
-      {/* pasture plane — equivalent to PR's ice plane */}
+      {/* polished dance floor — equivalent to PR's ice plane / Piper's pasture */}
       <div className="bd-splash__pasture" />
 
-      {/* back hill — atmospheric layer, slow horizontal drift */}
+      {/* back layer — distant laser beams cutting through haze */}
       <div className="bd-splash__hills bd-splash__hills--back">
         <svg viewBox="0 0 1600 240" preserveAspectRatio="none" width="200%" height="100%">
           <defs>
-            <linearGradient id="back-hill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6b8556" stopOpacity=".85" />
-              <stop offset="100%" stopColor="#4a6440" stopOpacity=".95" />
+            <linearGradient id="bd-laser-pink" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%"  stopColor="#ff3ea5" stopOpacity="0.0" />
+              <stop offset="60%" stopColor="#ff3ea5" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ff3ea5" stopOpacity="0.85" />
+            </linearGradient>
+            <linearGradient id="bd-laser-cyan" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%"  stopColor="#38e6ff" stopOpacity="0.0" />
+              <stop offset="60%" stopColor="#38e6ff" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#38e6ff" stopOpacity="0.85" />
+            </linearGradient>
+            <linearGradient id="bd-laser-amber" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%"  stopColor="#ffd84a" stopOpacity="0.0" />
+              <stop offset="60%" stopColor="#ffd84a" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#ffd84a" stopOpacity="0.8" />
             </linearGradient>
           </defs>
-          <path
-            d="M0,240 C160,140 320,160 480,150 C640,140 760,170 920,148 C1080,128 1220,170 1380,150 C1480,140 1560,160 1600,158 L1600,240 Z"
-            fill="url(#back-hill)"
-          />
+          {/* angled laser beams emanating from the stage area at the top */}
+          <polygon points="780,0  900,240  860,240" fill="url(#bd-laser-pink)" />
+          <polygon points="800,0  680,240  720,240" fill="url(#bd-laser-cyan)" />
+          <polygon points="820,0 1080,240 1040,240" fill="url(#bd-laser-amber)" />
+          <polygon points="780,0  520,240  560,240" fill="url(#bd-laser-pink)" opacity=".7" />
+          <polygon points="800,0 1240,240 1200,240" fill="url(#bd-laser-cyan)" opacity=".7" />
         </svg>
       </div>
 
-      {/* front hill + props */}
+      {/* front layer — DJ booth silhouette + crowd silhouettes + barrier posts */}
       <div className="bd-splash__hills bd-splash__hills--front">
         <svg viewBox="0 0 800 280" preserveAspectRatio="xMidYMax meet" width="100%" height="100%">
           <defs>
-            <linearGradient id="front-hill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"  stopColor="#5e8348" />
-              <stop offset="55%" stopColor="#456832" />
-              <stop offset="100%" stopColor="#2f4d22" />
+            <linearGradient id="bd-floor" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"  stopColor="#1c1230" />
+              <stop offset="50%" stopColor="#15091f" />
+              <stop offset="100%" stopColor="#06060c" />
             </linearGradient>
-            <linearGradient id="hill-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2a4422" stopOpacity=".55" />
-              <stop offset="100%" stopColor="#1a2e14" stopOpacity=".75" />
-            </linearGradient>
-            <linearGradient id="barn-wall" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#7d6444" />
-              <stop offset="100%" stopColor="#523c24" />
-            </linearGradient>
-            <linearGradient id="barn-roof" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#52453a" />
-              <stop offset="100%" stopColor="#2c2520" />
+            <linearGradient id="bd-stage" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0e0716" />
+              <stop offset="100%" stopColor="#06030c" />
             </linearGradient>
           </defs>
 
-          {/* hill silhouette — gentle undulation, two layers for depth */}
+          {/* polished floor with reflection */}
           <path
-            d="M0,280 C140,210 240,225 360,210 C500,193 620,222 800,212 L800,280 Z"
-            fill="url(#hill-shadow)"
-          />
-          <path
-            d="M0,280 C140,196 240,212 360,196 C500,178 620,212 800,202 L800,280 Z"
-            fill="url(#front-hill)"
+            d="M0,280 L0,210 L800,210 L800,280 Z"
+            fill="url(#bd-floor)"
           />
 
-          {/* far-left tree clump — three layered crowns with a trunk */}
-          <g transform="translate(96,182)">
-            {/* cast shadow on hill */}
-            <ellipse cx="6" cy="38" rx="48" ry="6" fill="#1a2e14" opacity=".5" />
-            {/* trunk */}
-            <rect x="-4" y="0" width="10" height="22" fill="#3a2410" />
-            {/* foliage — darker base, midtone, highlight cluster */}
-            <ellipse cx="-22" cy="-2" rx="22" ry="20" fill="#243f1c" />
-            <ellipse cx="22" cy="-4"  rx="24" ry="22" fill="#365a28" />
-            <ellipse cx="0"  cy="-18" rx="26" ry="22" fill="#446e30" />
-            <ellipse cx="14" cy="-22" rx="14" ry="12" fill="#5d8d3e" opacity=".85" />
-          </g>
+          {/* DJ booth — wide platform centered, multiple LED stripes, back wall */}
+          <g transform="translate(400,140)">
+            {/* back LED wall — dark with horizontal neon lines */}
+            <rect x="-180" y="-60" width="360" height="60" fill="#06030c" />
+            <rect x="-180" y="-54" width="360" height="2" fill="#ff3ea5" />
+            <rect x="-180" y="-44" width="360" height="2" fill="#38e6ff" />
+            <rect x="-180" y="-34" width="360" height="2" fill="#ff3ea5" />
+            <rect x="-180" y="-24" width="360" height="2" fill="#38e6ff" />
+            <rect x="-180" y="-14" width="360" height="2" fill="#ff3ea5" />
+            <rect x="-180" y= "-4" width="360" height="2" fill="#38e6ff" />
 
-          {/* mid-right tree clump — smaller, sits lower on the hill */}
-          <g transform="translate(710,196)">
-            <ellipse cx="0" cy="36" rx="42" ry="5" fill="#1a2e14" opacity=".5" />
-            <rect x="-4" y="0" width="8" height="20" fill="#3a2410" />
-            <ellipse cx="-18" cy="-2" rx="20" ry="18" fill="#243f1c" />
-            <ellipse cx="18"  cy="-4" rx="22" ry="20" fill="#365a28" />
-            <ellipse cx="0"   cy="-16" rx="22" ry="20" fill="#446e30" />
-          </g>
-
-          {/* barn — proper gable, planks, hayloft window, ground shadow */}
-          <g transform="translate(545,138)">
-            {/* ground shadow */}
-            <ellipse cx="0" cy="92" rx="78" ry="8" fill="#1a2e14" opacity=".55" />
-            {/* walls */}
-            <rect x="-60" y="22" width="120" height="68" fill="url(#barn-wall)" />
-            {/* corner trim */}
-            <rect x="-62" y="22" width="4" height="68" fill="#332010" />
-            <rect x="58"  y="22" width="4" height="68" fill="#332010" />
-            {/* gable roof — two slopes meeting at a ridge */}
-            <polygon points="-68,22 0,-18 68,22" fill="url(#barn-roof)" />
-            {/* roof underside / fascia */}
-            <rect x="-68" y="20" width="136" height="5" fill="#1d1814" />
-            {/* ridge cap */}
-            <rect x="-66" y="-20" width="132" height="3" fill="#0e0a08" />
-            {/* big front door */}
-            <rect x="-15" y="50" width="30" height="40" fill="#1d130a" />
-            <rect x="-15" y="50" width="30" height="3" fill="#0e0805" />
-            <rect x="-1" y="50" width="2" height="40" fill="#3a2918" />
-            {/* hayloft window in gable */}
-            <rect x="-9" y="0" width="18" height="14" fill="#1d130a" />
-            <rect x="-9" y="6" width="18" height="2" fill="#d6cda8" />
-            <rect x="-1" y="0" width="2" height="14" fill="#d6cda8" />
-            {/* vertical plank seams across the wall */}
-            {[-46, -32, -18, -4, 10, 24, 38, 50].map((px, i) => (
-              <rect key={i} x={px - 1} y="22" width="1.5" height="68" fill="#332010" opacity=".55" />
-            ))}
-          </g>
-
-          {/* sheep flock — 5 sheep, grouped near the center, sized for read */}
-          {[
-            { x: 260, y: 230, s: 1.0 },
-            { x: 300, y: 234, s: 0.95 },
-            { x: 340, y: 232, s: 1.05 },
-            { x: 380, y: 236, s: 0.92 },
-            { x: 220, y: 234, s: 0.88 },
-          ].map((sh, i) => (
-            <g key={i} transform={`translate(${sh.x},${sh.y}) scale(${sh.s})`}>
-              {/* shadow under hoof */}
-              <ellipse cx="0" cy="11" rx="16" ry="3" fill="#1a2e14" opacity=".45" />
-              {/* fluffy wool body — cloud-of-bumps silhouette */}
-              <g fill="#f6efdc">
-                <ellipse cx="-7" cy="-3" rx="9" ry="7" />
-                <ellipse cx="0"  cy="-5" rx="9" ry="7.5" />
-                <ellipse cx="8"  cy="-3" rx="9" ry="7" />
-                <ellipse cx="-3" cy="2"  rx="11" ry="6" />
-                <ellipse cx="6"  cy="2"  rx="10" ry="6" />
+            {/* truss with hanging moving heads */}
+            <rect x="-200" y="-70" width="400" height="6" fill="#16161e" />
+            {[-140, -70, 0, 70, 140].map((x, i) => (
+              <g key={i} transform={`translate(${x},-60)`}>
+                <rect x="-5" y="0" width="10" height="10" fill="#16161e" />
+                <polygon points="-7,10 7,10 4,18 -4,18" fill="#ffd84a" opacity={0.7 + (i % 2) * 0.2} />
               </g>
-              {/* dye patch — neutral cream tone so colors stay reserved for gameplay */}
-              <ellipse cx="-2" cy="-2" rx="5" ry="3.5" fill="#dfd1a8" />
+            ))}
+
+            {/* stage platform */}
+            <rect x="-160" y="0" width="320" height="36" fill="url(#bd-stage)" />
+            {/* front fascia strips */}
+            <rect x="-160" y="2"  width="320" height="3" fill="#ff3ea5" />
+            <rect x="-160" y="30" width="320" height="2" fill="#38e6ff" />
+
+            {/* DJ silhouette behind the console */}
+            <g transform="translate(0,-8)">
+              {/* shoulders + torso */}
+              <rect x="-22" y="-2" width="44" height="22" rx="6" fill="#0a0a10" />
               {/* head */}
-              <ellipse cx="13" cy="-2" rx="5.5" ry="4.5" fill="#2a1f1a" />
-              {/* ear */}
-              <polygon points="11,-7 9,-3 14,-5" fill="#2a1f1a" />
-              {/* eye glint */}
-              <circle cx="15" cy="-3" r="1.1" fill="#fff" />
-              {/* tiny feet */}
-              <rect x="-5" y="7" width="2.4" height="4" fill="#2a1f1a" />
-              <rect x="3"  y="7" width="2.4" height="4" fill="#2a1f1a" />
+              <circle cx="0" cy="-10" r="11" fill="#0a0a10" />
+              {/* headphone band */}
+              <path d="M -11 -16 Q 0 -26 11 -16" stroke="#38e6ff" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              <circle cx="-12" cy="-12" r="3.5" fill="#0a0a10" stroke="#38e6ff" strokeWidth="1.2" />
+              <circle cx=" 12" cy="-12" r="3.5" fill="#0a0a10" stroke="#38e6ff" strokeWidth="1.2" />
+              {/* arms up */}
+              <rect x="-26" y="-2" width="6" height="14" rx="3" transform="rotate(-25 -23 5)" fill="#0a0a10" />
+              <rect x=" 20" y="-2" width="6" height="14" rx="3" transform="rotate( 25 23 5)" fill="#0a0a10" />
+            </g>
+
+            {/* turntables flanking the DJ */}
+            {[-70, 70].map((x, i) => (
+              <g key={i} transform={`translate(${x},14)`}>
+                <ellipse cx="0" cy="0" rx="22" ry="6" fill="#0a0a10" />
+                <ellipse cx="0" cy="-2" rx="18" ry="4" fill="#3a2a18" />
+                <circle cx="0" cy="-2" r="2" fill="#ffd84a" />
+              </g>
+            ))}
+
+            {/* console between turntables */}
+            <rect x="-44" y="6" width="88" height="14" rx="3" fill="#15151c" />
+            <rect x="-40" y="9" width="80" height="2" fill="#ff3ea5" opacity="0.85" />
+          </g>
+
+          {/* speaker stacks at the corners of the stage */}
+          {[200, 600].map((x, i) => (
+            <g key={i} transform={`translate(${x},162)`}>
+              <rect x="-12" y="-44" width="24" height="48" rx="3" fill="#06030c" />
+              <circle cx="0" cy="-32" r="5.5" fill="#1a1a22" />
+              <circle cx="0" cy="-18" r="5.5" fill="#1a1a22" />
+              <circle cx="0" cy="-4"  r="5.5" fill="#1a1a22" />
+              {/* side LED */}
+              <rect x="11" y="-44" width="1.5" height="48" fill={i === 0 ? "#38e6ff" : "#ff3ea5"} />
             </g>
           ))}
 
-          {/* sheepdog — biggest single character, front-and-center hero */}
-          <g transform="translate(140,236)">
-            {/* shadow */}
-            <ellipse cx="2" cy="14" rx="28" ry="4.5" fill="#1a2e14" opacity=".55" />
-            {/* body — black */}
-            <ellipse cx="-2" cy="0" rx="24" ry="11" fill="#1a1410" />
-            {/* white chest blaze */}
-            <ellipse cx="14" cy="2" rx="9" ry="8" fill="#f4ecd8" />
-            {/* white belly stripe */}
-            <ellipse cx="-2" cy="4" rx="16" ry="4" fill="#f4ecd8" />
-            {/* head */}
-            <ellipse cx="20" cy="-4" rx="9" ry="8" fill="#1a1410" />
-            {/* muzzle (white) */}
-            <ellipse cx="26" cy="-2" rx="5" ry="3.5" fill="#f4ecd8" />
-            {/* nose */}
-            <circle cx="30" cy="-2" r="1.6" fill="#0a0a0a" />
-            {/* eye + eye highlight */}
-            <circle cx="22" cy="-6" r="1.4" fill="#fff" />
-            <circle cx="22" cy="-6" r="0.7" fill="#0a0a0a" />
-            {/* ears — one forward, one back */}
-            <polygon points="15,-12 14,-4 22,-8" fill="#1a1410" />
-            <polygon points="20,-12 22,-4 26,-9" fill="#1a1410" />
-            {/* gold collar — the leader marker, picked up by the in-game dog too */}
-            <ellipse cx="16" cy="-1" rx="6" ry="2.4" fill="#ffd84a" stroke="#9a7a18" strokeWidth=".6" />
-            {/* tail — perked up */}
-            <path
-              d="M -22 -2 Q -34 -10 -34 -22"
-              stroke="#1a1410"
-              strokeWidth="5"
-              fill="none"
-              strokeLinecap="round"
-            />
-            <circle cx="-34" cy="-22" r="3.5" fill="#f4ecd8" />
-            {/* legs hint */}
-            <rect x="-12" y="9" width="4" height="6" fill="#1a1410" />
-            <rect x="6"   y="9" width="4" height="6" fill="#1a1410" />
-            <rect x="-2"  y="9" width="4" height="6" fill="#1a1410" />
-          </g>
+          {/* crowd silhouette — rows of black head bumps in front of the stage */}
+          {[182, 192, 200, 208].map((y, row) => {
+            const cnt = 32 + row * 4;
+            const spread = 800;
+            return (
+              <g key={row} opacity={0.95 - row * 0.05}>
+                {Array.from({ length: cnt }).map((_, i) => {
+                  const cx = (i + 0.5) * (spread / cnt) + (row % 2 === 0 ? 0 : (spread / cnt) * 0.5);
+                  const hr = 4.5 + ((i * 17 + row * 7) % 4) * 0.6;
+                  return (
+                    <ellipse
+                      key={i}
+                      cx={cx}
+                      cy={y}
+                      rx={hr}
+                      ry={hr * 0.85}
+                      fill="#020207"
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
 
-          {/* foreground grass blades — softens the hill edge */}
-          <g stroke="#3a5b28" strokeWidth="2" strokeLinecap="round" fill="none" opacity=".75">
-            <path d="M 30 274 q 3 -10 0 -22" />
-            <path d="M 38 276 q -3 -8 2 -18" />
-            <path d="M 480 276 q 2 -10 -1 -22" />
-            <path d="M 488 278 q -2 -8 3 -16" />
-            <path d="M 760 276 q -2 -10 2 -22" />
+          {/* a handful of raised hands among the crowd */}
+          {[120, 240, 360, 480, 600, 720].map((x, i) => (
+            <g key={i}>
+              <rect x={x - 0.8} y={175 - ((i % 2) * 3)} width="1.6" height="10" fill="#020207" />
+              <circle cx={x} cy={172 - ((i % 2) * 3)} r="1.4" fill="#020207" />
+            </g>
+          ))}
+
+          {/* glowing barrier posts on the runway in front of the crowd */}
+          {[160, 280, 400, 520, 640].map((x, i) => (
+            <g key={i} transform={`translate(${x},226)`}>
+              <rect x="-1.2" y="-22" width="2.4" height="22" fill="#1a1a22" />
+              <circle cx="0" cy="-22" r="3.5" fill="#ff3ea5" />
+              <circle cx="0" cy="-22" r="6.5" fill="#ff3ea5" opacity="0.25" />
+            </g>
+          ))}
+          {/* barrier belts */}
+          {[[160, 280], [280, 400], [400, 520], [520, 640]].map(([a, b], i) => (
+            <line key={i} x1={a} y1="224" x2={b} y2="224" stroke="#2a2a30" strokeWidth="1.5" />
+          ))}
+
+          {/* a faint dance floor LED grid in the foreground — only a hint */}
+          <g opacity="0.18">
+            {[230, 245, 260].map(y => (
+              <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="#38e6ff" strokeWidth=".5" />
+            ))}
+            {Array.from({ length: 11 }).map((_, i) => (
+              <line key={`v${i}`} x1={i * 80} y1="225" x2={i * 80} y2="278" stroke="#38e6ff" strokeWidth=".5" />
+            ))}
           </g>
         </svg>
       </div>
 
       <div className="bd-splash__content">
         <h1 className="bd-splash__title">
-          <span className="bd-splash__title-emph">Pied</span>
-          <span className="bd-splash__title-emph bd-splash__title-emph--accent">Piper</span>
+          <span className="bd-splash__title-emph">Beat</span>
+          <span className="bd-splash__title-emph bd-splash__title-emph--accent">Drop</span>
         </h1>
         <p className="bd-splash__subtitle">{t('subtitle')}</p>
 

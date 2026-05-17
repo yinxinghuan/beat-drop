@@ -1,7 +1,8 @@
-// Static scenery props for the pasture: pond, hay bales, boulders, trees,
-// barn silhouette, rail fence, flower patches, dirt path. None of these
-// collide — they're purely visual to make the field feel like a place rather
-// than an empty disc.
+// Beat Drop scene props — neon columns, speaker stacks, amps, monitor wedges,
+// LED floor markers, glowing barrier posts, drones, music-note particles, and
+// a DJ mainstage booth. Zone composition mirrors the Piper pasture so the
+// spatial choreography (dense cluster here, open meadow there) survives the
+// retheme; only the visual primitives changed.
 
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
@@ -17,313 +18,383 @@ function seeded(seed: number) {
   };
 }
 
-// ---------------- Pond -------------------
-function Pond({ position, radius }: { position: [number, number, number]; radius: number }) {
-  const ringRef = useRef<THREE.Mesh>(null);
+// ============================================================================
+// VIP platform (replaces the pond) — a small raised matte-black disc with a
+// rope of glowing seam light around the edge. Sits where the pond used to be.
+// ============================================================================
+function VipPlatform({ position, radius }: { position: [number, number, number]; radius: number }) {
+  const rimRef = useRef<THREE.MeshStandardMaterial>(null);
   useFrame(({ clock }) => {
-    if (!ringRef.current) return;
-    const t = clock.getElapsedTime();
-    ringRef.current.scale.set(1 + Math.sin(t * 1.2) * 0.04, 1, 1 + Math.cos(t * 1.2) * 0.04);
+    if (!rimRef.current) return;
+    rimRef.current.emissiveIntensity = 0.30 + Math.sin(clock.getElapsedTime() * 1.4) * 0.10;
   });
   return (
     <group position={position}>
-      {/* base water — muted blue-gray, low sat so it doesn't compete */}
+      {/* base disc — matte black */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
         <circleGeometry args={[radius, 48]} />
-        <meshStandardMaterial color="#5c7a85" roughness={0.45} metalness={0.05} />
+        <meshStandardMaterial color="#0c0c14" roughness={0.55} metalness={0.2} />
       </mesh>
-      {/* highlight ring — subtle */}
-      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-        <ringGeometry args={[radius * 0.62, radius * 0.78, 48]} />
-        <meshStandardMaterial color="#7b97a2" transparent opacity={0.4} />
+      {/* very faint rim seam — barely there */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
+        <ringGeometry args={[radius * 0.92, radius * 1.0, 48]} />
+        <meshStandardMaterial ref={rimRef} color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={0.35} />
       </mesh>
-      {/* lily pads — sage */}
-      {[0.55, 0.30, -0.40].map((px, i) => (
-        <mesh
-          key={i}
-          position={[px * radius, 0.06, ((i % 2) - 0.5) * radius * 0.6]}
-          rotation={[-Math.PI / 2, 0, i]}
-        >
-          <circleGeometry args={[0.45 + i * 0.05, 16]} />
-          <meshStandardMaterial color="#4e6240" roughness={0.85} />
-        </mesh>
-      ))}
-      {/* muddy bank — warm earth */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[radius * 1.0, radius * 1.18, 48]} />
-        <meshStandardMaterial color="#7a6442" roughness={1} />
+      {/* a low raised tile in the middle to read as a platform */}
+      <mesh position={[0, 0.10, 0]} receiveShadow>
+        <cylinderGeometry args={[radius * 0.75, radius * 0.78, 0.20, 36]} />
+        <meshStandardMaterial color="#16101e" roughness={0.5} metalness={0.3} />
+      </mesh>
+      {/* inner disc — purple but barely glowing */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.21, 0]}>
+        <circleGeometry args={[radius * 0.62, 36]} />
+        <meshStandardMaterial color="#1b0e2e" emissive="#3a2050" emissiveIntensity={0.20} />
       </mesh>
     </group>
   );
 }
 
-// ---------------- Hay bale ----------------
+// ============================================================================
+// Speaker stack (replaces the hay bale) — vertical 3-driver tower. Black box,
+// circular dust caps, neon LED strip down the side.
+// ============================================================================
 function HayBale({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      <mesh castShadow position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.6, 0.6, 1.1, 18]} />
-        <meshStandardMaterial color="#dbb35e" roughness={0.92} />
+      {/* cabinet */}
+      <RoundedBox args={[1.0, 2.0, 0.85]} radius={0.05} smoothness={3}
+                  position={[0, 1.0, 0]} castShadow>
+        <meshStandardMaterial color="#0d0d12" roughness={0.65} metalness={0.25} />
+      </RoundedBox>
+      {/* three drivers stacked — dark circles with metal cone */}
+      {[1.55, 1.0, 0.45].map((y, i) => (
+        <group key={i} position={[0, y, 0.43]}>
+          <mesh>
+            <cylinderGeometry args={[0.30, 0.30, 0.05, 24]} />
+            <meshStandardMaterial color="#1a1a22" />
+          </mesh>
+          <mesh position={[0, 0, 0.04]}>
+            <cylinderGeometry args={[0.26, 0.30, 0.06, 24]} />
+            <meshStandardMaterial color="#0a0a10" roughness={0.4} metalness={0.5} />
+          </mesh>
+          <mesh position={[0, 0, 0.08]}>
+            <sphereGeometry args={[0.07, 14, 10]} />
+            <meshStandardMaterial color="#2a2a32" metalness={0.7} roughness={0.25} />
+          </mesh>
+        </group>
+      ))}
+      {/* faint side LED strip — barely lit, just a hint of "powered on" */}
+      <mesh position={[0.51, 1.0, 0]}>
+        <boxGeometry args={[0.02, 1.7, 0.10]} />
+        <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.35} />
       </mesh>
-      {/* end-cap darker rings */}
-      <mesh position={[0, 0.5, 0.56]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.40, 0.58, 18]} />
-        <meshStandardMaterial color="#9d7a35" />
-      </mesh>
-      <mesh position={[0, 0.5, -0.56]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.40, 0.58, 18]} />
-        <meshStandardMaterial color="#9d7a35" />
-      </mesh>
-      {/* twine band */}
-      <mesh position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.62, 0.62, 0.05, 18]} />
-        <meshStandardMaterial color="#88321f" />
+      {/* small handle on top */}
+      <mesh position={[0, 2.07, 0]}>
+        <boxGeometry args={[0.6, 0.06, 0.18]} />
+        <meshStandardMaterial color="#1c1c22" metalness={0.5} />
       </mesh>
     </group>
   );
 }
 
-// ---------------- Boulder cluster ----------
+// ============================================================================
+// Amp box (replaces the boulder cluster) — black square amplifier with a grille
+// pattern and a thin neon LED strip on top. Variants in scale fill the role
+// the boulder cluster played: low chunky obstacle silhouettes.
+// ============================================================================
 function Boulder({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
-  const rand = useMemo(() => {
-    const r = seeded(position[0] * 13 + position[2] * 7 + 11);
-    return { a: r(), b: r(), c: r(), d: r(), e: r() };
-  }, [position]);
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 0.45, 0]} castShadow rotation={[rand.a, rand.b, rand.c]}>
-        <sphereGeometry args={[0.55, 12, 10]} />
-        <meshStandardMaterial color="#7e7568" roughness={0.95} />
+      <RoundedBox args={[1.1, 0.85, 1.1]} radius={0.06} smoothness={3}
+                  position={[0, 0.45, 0]} castShadow>
+        <meshStandardMaterial color="#0e0e14" roughness={0.7} metalness={0.25} />
+      </RoundedBox>
+      {/* grille (front face) */}
+      <mesh position={[0, 0.45, 0.56]}>
+        <planeGeometry args={[0.92, 0.65]} />
+        <meshStandardMaterial color="#1a1a22" roughness={0.95} />
       </mesh>
-      <mesh position={[0.55 + rand.d * 0.2, 0.30, -0.20]} castShadow>
-        <sphereGeometry args={[0.32, 10, 8]} />
-        <meshStandardMaterial color="#8e8576" roughness={0.95} />
+      {/* very faint warm-white seam on top */}
+      <mesh position={[0, 0.89, 0]}>
+        <boxGeometry args={[0.95, 0.04, 0.95]} />
+        <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.30} />
       </mesh>
-      <mesh position={[-0.40, 0.25, 0.40 + rand.e * 0.2]} castShadow>
-        <sphereGeometry args={[0.25, 10, 8]} />
-        <meshStandardMaterial color="#6f6759" roughness={0.95} />
-      </mesh>
+      {/* small back amp peeking */}
+      <RoundedBox args={[0.65, 0.45, 0.55]} radius={0.05} smoothness={3}
+                  position={[0.7, 0.22, -0.35]} castShadow>
+        <meshStandardMaterial color="#10101a" roughness={0.7} />
+      </RoundedBox>
     </group>
   );
 }
 
-// Unified vegetation palette (low-saturation sage/olive). Defined once so all
-// trees + bushes pull from the same family — keeps the scene visually
-// coherent. The earlier high-sat #4faa5b style is gone except where the dye
-// palette (gameplay) needs to pop.
-const FOLIAGE = {
-  oakBase:   '#5d7548',   // mid sage
-  oakLight:  '#7a8e5e',
-  oakDark:   '#3f5234',
-  oakTop:    '#94a574',
-  pine1:     '#446044',   // muted forest green
-  pine2:     '#4f6a4a',
-  pine3:     '#5d7855',
-  pineTop:   '#7b9572',
-  birch1:    '#92a772',   // pale olive
-  birch2:    '#a8b984',
-  birch3:    '#7d9265',
-  bushGreen: ['#4e6240', '#5d7548', '#3f5234', '#6b8156'] as const,
-  trunkDark: '#3e2f1f',
-  trunkLight:'#5c4528',
-  bark:      '#6b5132',
+// ============================================================================
+// DECOR palette — STRICTLY DISCIPLINED to NOT overlap with the dye palette.
+// Dancers, gates, and target ribbons are the only places where #ff3ea5 (pink),
+// #38e6ff (cyan), #ffd84a (amber), #6dff7a (lime) may appear. Everything else
+// — light columns, speaker LEDs, amp caps, mic glows, floor markers, barrier
+// posts, dance-floor seams — uses muted neutrals so the gameplay-critical
+// colors stay legible in a crowded scene. Same rule as Piper's
+// feedback_dye_palette_discipline. (Soft warm white biased toward amber-gold
+// is the one decoration accent that doesn't clash because the gameplay amber
+// has full saturation while the decoration warm-white reads as off-white.)
+// ============================================================================
+const DECOR = {
+  white:     '#ffffff',          // pure light source core (bulb)
+  warmWhite: '#f7e8c6',          // warm bulb glow
+  coolWhite: '#cfe0f0',          // cool fluorescent bulb glow
+  dimAmber:  '#9c7a36',          // a warm decorative LED — desaturated so it
+                                 // can't be mistaken for the dye amber
+  steel:     '#2a2a30',          // bare metal trim
+  darkSlate: '#16161e',          // matte casing
+  void:      '#0a0a10',          // deepest shadow
 };
 
-// ---------------- Oak (big leafy) ---------
+// ============================================================================
+// Oak → MASSIVE 4-driver speaker stack. The dominant decoration silhouette.
+// Pure matte black cabinets, visible round drivers, one tiny power LED. Reads
+// as "underground warehouse PA system."
+// ============================================================================
 function Oak({ position, scale = 1, rot = 0 }:
              { position: [number, number, number]; scale?: number; rot?: number }) {
   return (
     <group position={position} scale={scale} rotation={[0, rot, 0]}>
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <cylinderGeometry args={[0.32, 0.52, 2.8, 10]} />
-        <meshStandardMaterial color={FOLIAGE.trunkLight} roughness={0.95} />
+      {/* concrete riser at the base */}
+      <RoundedBox args={[1.5, 0.25, 1.4]} radius={0.03} smoothness={3}
+                  position={[0, 0.12, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color="#13131a" roughness={0.95} metalness={0.0} />
+      </RoundedBox>
+      {/* lower sub cabinet — biggest box */}
+      <RoundedBox args={[1.35, 1.5, 1.2]} radius={0.04} smoothness={3}
+                  position={[0, 1.0, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={DECOR.void} roughness={0.7} metalness={0.2} />
+      </RoundedBox>
+      {/* mid cabinet */}
+      <RoundedBox args={[1.20, 1.4, 1.05]} radius={0.04} smoothness={3}
+                  position={[0, 2.45, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={DECOR.darkSlate} roughness={0.7} metalness={0.2} />
+      </RoundedBox>
+      {/* top horn cabinet */}
+      <RoundedBox args={[1.0, 0.65, 0.9]} radius={0.04} smoothness={3}
+                  position={[0, 3.50, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={DECOR.darkSlate} roughness={0.7} metalness={0.2} />
+      </RoundedBox>
+      {/* drivers — circles inset into each cabinet face. Pure dark, no glow. */}
+      {/* sub: one big 18" driver */}
+      <mesh position={[0, 1.0, 0.61]}>
+        <cylinderGeometry args={[0.50, 0.50, 0.04, 28]} />
+        <meshStandardMaterial color="#0a0a10" roughness={0.85} />
       </mesh>
-      <mesh position={[0, 0.15, 0]} castShadow>
-        <coneGeometry args={[0.72, 0.4, 12]} />
-        <meshStandardMaterial color={FOLIAGE.trunkDark} roughness={1} />
+      <mesh position={[0, 1.0, 0.63]}>
+        <sphereGeometry args={[0.18, 12, 10]} />
+        <meshStandardMaterial color="#1a1a22" metalness={0.6} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 3.2, 0]} castShadow>
-        <sphereGeometry args={[1.65, 16, 14]} />
-        <meshStandardMaterial color={FOLIAGE.oakBase} roughness={0.9} />
+      {/* mid: two 12" drivers stacked */}
+      {[2.9, 2.0].map((y, i) => (
+        <group key={i} position={[0, y, 0.53]}>
+          <mesh>
+            <cylinderGeometry args={[0.30, 0.30, 0.04, 24]} />
+            <meshStandardMaterial color="#0a0a10" roughness={0.85} />
+          </mesh>
+          <mesh position={[0, 0, 0.03]}>
+            <sphereGeometry args={[0.10, 12, 10]} />
+            <meshStandardMaterial color="#1a1a22" metalness={0.6} roughness={0.3} />
+          </mesh>
+        </group>
+      ))}
+      {/* top: horn slot */}
+      <mesh position={[0, 3.50, 0.46]}>
+        <boxGeometry args={[0.6, 0.30, 0.04]} />
+        <meshStandardMaterial color="#0a0a10" roughness={0.85} />
       </mesh>
-      <mesh position={[0.95, 3.55, 0.4]} castShadow>
-        <sphereGeometry args={[1.20, 14, 12]} />
-        <meshStandardMaterial color={FOLIAGE.oakLight} roughness={0.9} />
-      </mesh>
-      <mesh position={[-0.85, 3.45, -0.30]} castShadow>
-        <sphereGeometry args={[1.05, 14, 12]} />
-        <meshStandardMaterial color={FOLIAGE.oakDark} roughness={0.9} />
-      </mesh>
-      <mesh position={[0.10, 3.95, -0.80]} castShadow>
-        <sphereGeometry args={[0.85, 12, 10]} />
-        <meshStandardMaterial color={FOLIAGE.oakLight} roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 4.3, 0]} castShadow>
-        <sphereGeometry args={[0.65, 12, 10]} />
-        <meshStandardMaterial color={FOLIAGE.oakTop} roughness={0.85} />
+      {/* single tiny dim power LED on the side — proves it's on */}
+      <mesh position={[0.61, 0.30, 0]}>
+        <sphereGeometry args={[0.025, 8, 6]} />
+        <meshStandardMaterial color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={0.7} />
       </mesh>
     </group>
   );
 }
 
-// ---------------- Pine (tall conifer) ----
+// ============================================================================
+// Pine → STEEL TRUSS scaffold with hanging speakers. Tall dark scaffolding,
+// crossbars, two black speaker boxes hanging from the truss. All matte dark
+// metal — the only emission is one tiny indicator on each speaker.
+// ============================================================================
 function Pine({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <cylinderGeometry args={[0.20, 0.34, 2.8, 8]} />
-        <meshStandardMaterial color={FOLIAGE.bark} roughness={0.95} />
-      </mesh>
-      <mesh position={[0, 2.4, 0]} castShadow>
-        <coneGeometry args={[1.55, 1.6, 14]} />
-        <meshStandardMaterial color={FOLIAGE.pine1} roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 3.6, 0]} castShadow>
-        <coneGeometry args={[1.25, 1.4, 12]} />
-        <meshStandardMaterial color={FOLIAGE.pine2} roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 4.7, 0]} castShadow>
-        <coneGeometry args={[0.95, 1.3, 10]} />
-        <meshStandardMaterial color={FOLIAGE.pine3} roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 5.7, 0]} castShadow>
-        <coneGeometry args={[0.55, 1.0, 8]} />
-        <meshStandardMaterial color={FOLIAGE.pineTop} roughness={0.85} />
-      </mesh>
+      {/* base plates */}
+      {[-0.7, 0.7].map((x, i) => (
+        <RoundedBox key={i} args={[0.4, 0.12, 0.4]} radius={0.02} smoothness={3}
+                    position={[x, 0.06, 0]} castShadow>
+          <meshStandardMaterial color={DECOR.darkSlate} roughness={0.85} metalness={0.4} />
+        </RoundedBox>
+      ))}
+      {/* vertical steel posts */}
+      {[-0.7, 0.7].map((x, i) => (
+        <mesh key={i} position={[x, 3.0, 0]} castShadow>
+          <cylinderGeometry args={[0.08, 0.08, 6.0, 8]} />
+          <meshStandardMaterial color={DECOR.steel} roughness={0.55} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* horizontal crossbars (3 levels) */}
+      {[1.6, 3.4, 5.8].map((y, i) => (
+        <mesh key={i} position={[0, y, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 1.6, 6]} />
+          <meshStandardMaterial color={DECOR.steel} roughness={0.55} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* diagonal cross-braces */}
+      {[
+        { y: 2.5, rotZ: 0.8 },
+        { y: 4.6, rotZ: -0.8 },
+      ].map((c, i) => (
+        <mesh key={i} position={[0, c.y, 0]} rotation={[0, 0, c.rotZ]}>
+          <cylinderGeometry args={[0.035, 0.035, 2.0, 6]} />
+          <meshStandardMaterial color={DECOR.steel} roughness={0.55} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* hanging speaker boxes */}
+      {[
+        { x: -0.6, y: 4.2 },
+        { x:  0.6, y: 3.6 },
+      ].map((s, i) => (
+        <group key={i} position={[s.x, s.y, 0]}>
+          {/* chain / strap */}
+          <mesh position={[0, 0.55, 0]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.6, 6]} />
+            <meshStandardMaterial color="#222229" metalness={0.5} />
+          </mesh>
+          {/* speaker box */}
+          <RoundedBox args={[0.55, 0.75, 0.55]} radius={0.04} smoothness={3} castShadow>
+            <meshStandardMaterial color={DECOR.void} roughness={0.75} metalness={0.2} />
+          </RoundedBox>
+          {/* driver */}
+          <mesh position={[0, 0, 0.28]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.18, 0.18, 0.03, 18]} />
+            <meshStandardMaterial color="#0a0a10" roughness={0.85} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
 
-// ---------------- Birch (slender pale) ----
+// ============================================================================
+// Birch → industrial steel pole with a junction box. Used in "wildflower"
+// zones to thin out the scene without adding light. All matte dark metal,
+// one almost-invisible LED on the junction box.
+// ============================================================================
 function Birch({ position, scale = 1, rot = 0 }:
                { position: [number, number, number]; scale?: number; rot?: number }) {
   return (
     <group position={position} scale={scale} rotation={[0, rot, 0]}>
-      {/* slim white trunk with dark bands */}
-      <mesh position={[0, 1.6, 0]} castShadow>
-        <cylinderGeometry args={[0.16, 0.18, 3.2, 8]} />
-        <meshStandardMaterial color="#f0ead8" roughness={0.9} />
+      {/* concrete base */}
+      <RoundedBox args={[0.55, 0.18, 0.55]} radius={0.02} smoothness={3}
+                  position={[0, 0.09, 0]} castShadow>
+        <meshStandardMaterial color="#13131a" roughness={0.95} />
+      </RoundedBox>
+      {/* tall slim steel pole */}
+      <mesh position={[0, 2.6, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.06, 5.0, 8]} />
+        <meshStandardMaterial color={DECOR.steel} roughness={0.5} metalness={0.7} />
       </mesh>
-      <mesh position={[0, 0.6, 0.0]}>
-        <cylinderGeometry args={[0.165, 0.165, 0.08, 8]} />
-        <meshStandardMaterial color="#3a3025" />
-      </mesh>
-      <mesh position={[0, 1.4, 0.0]}>
-        <cylinderGeometry args={[0.165, 0.165, 0.06, 8]} />
-        <meshStandardMaterial color="#3a3025" />
-      </mesh>
-      <mesh position={[0, 2.4, 0.0]}>
-        <cylinderGeometry args={[0.165, 0.165, 0.05, 8]} />
-        <meshStandardMaterial color="#3a3025" />
-      </mesh>
-      {/* light airy canopy */}
-      <mesh position={[0, 3.4, 0]} castShadow>
-        <sphereGeometry args={[1.10, 12, 10]} />
-        <meshStandardMaterial color={FOLIAGE.birch1} roughness={0.9} />
-      </mesh>
-      <mesh position={[0.55, 3.6, 0.2]} castShadow>
-        <sphereGeometry args={[0.80, 12, 10]} />
-        <meshStandardMaterial color={FOLIAGE.birch2} roughness={0.9} />
-      </mesh>
-      <mesh position={[-0.45, 3.5, -0.15]} castShadow>
-        <sphereGeometry args={[0.65, 10, 8]} />
-        <meshStandardMaterial color={FOLIAGE.birch3} roughness={0.9} />
+      {/* junction box clamped onto the pole */}
+      <RoundedBox args={[0.32, 0.40, 0.22]} radius={0.02} smoothness={3}
+                  position={[0.14, 1.4, 0]} castShadow>
+        <meshStandardMaterial color={DECOR.darkSlate} roughness={0.7} metalness={0.4} />
+      </RoundedBox>
+      {/* one tiny power indicator on the box */}
+      <mesh position={[0.30, 1.55, 0]}>
+        <sphereGeometry args={[0.022, 8, 6]} />
+        <meshStandardMaterial color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={0.6} />
       </mesh>
     </group>
   );
 }
 
-// ---------------- Stump (dead snag) ------
+// ============================================================================
+// Stage monitor (replaces Stump) — small wedge-shaped speaker tilted up.
+// ============================================================================
 function Stump({ position, rot = 0 }: { position: [number, number, number]; rot?: number }) {
   return (
     <group position={position} rotation={[0, rot, 0]}>
-      <mesh position={[0, 0.35, 0]} castShadow>
-        <cylinderGeometry args={[0.45, 0.55, 0.7, 10]} />
-        <meshStandardMaterial color="#4a3220" roughness={1} />
+      <RoundedBox args={[1.1, 0.50, 0.85]} radius={0.05} smoothness={3}
+                  position={[0, 0.30, 0]} rotation={[-0.25, 0, 0]} castShadow>
+        <meshStandardMaterial color="#0d0d14" roughness={0.7} metalness={0.2} />
+      </RoundedBox>
+      {/* driver */}
+      <mesh position={[0, 0.45, 0.34]} rotation={[-0.25, 0, 0]}>
+        <cylinderGeometry args={[0.18, 0.18, 0.04, 18]} />
+        <meshStandardMaterial color="#1a1a22" />
       </mesh>
-      {/* inner rings */}
-      <mesh position={[0, 0.71, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.1, 0.42, 16]} />
-        <meshStandardMaterial color="#8a6b3e" />
-      </mesh>
-      <mesh position={[0, 0.715, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.20, 0.32, 16]} />
-        <meshStandardMaterial color="#5a3f22" />
+      <mesh position={[0, 0.45, 0.36]} rotation={[-0.25, 0, 0]}>
+        <sphereGeometry args={[0.05, 12, 8]} />
+        <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.35} />
       </mesh>
     </group>
   );
 }
 
-// ---------------- Bush (low foliage clump) -----------
-// Tint is restricted to the sage/olive family — decorative bushes never
-// borrow from the dye palette. Optional cream/lavender wildflower dots may be
-// shown via `accent` (gameplay-neutral hues).
-function Bush({ position, scale = 1, tint = '#5d7548', accent }:
+// ============================================================================
+// Sub crate (replaces Bush) — short matte-black box on the floor. Pure
+// decoration, no light. Reads as "extra sub speaker scattered around."
+// ============================================================================
+function Bush({ position, scale = 1, tint = DECOR.darkSlate, accent }:
               { position: [number, number, number]; scale?: number; tint?: string; accent?: string }) {
-  const rand = useMemo(() => {
-    const r = seeded(position[0] * 17 + position[2] * 23 + 5);
-    return { a: r(), b: r(), c: r(), d: r() };
-  }, [position]);
+  // remap legacy sage tints onto dark slate so existing callers paint dark
+  const isLegacySage = tint.startsWith('#4') || tint.startsWith('#5') || tint.startsWith('#6') || tint.startsWith('#7');
+  const color = isLegacySage ? DECOR.darkSlate : tint;
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 0.45, 0]} castShadow>
-        <sphereGeometry args={[0.65, 12, 10]} />
-        <meshStandardMaterial color={tint} roughness={0.95} />
+      {/* main crate */}
+      <RoundedBox args={[0.95, 0.6, 0.85]} radius={0.04} smoothness={3}
+                  position={[0, 0.30, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={color} roughness={0.75} metalness={0.15} />
+      </RoundedBox>
+      {/* driver inset (front face) */}
+      <mesh position={[0, 0.30, 0.43]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.20, 0.20, 0.04, 18]} />
+        <meshStandardMaterial color="#08080e" roughness={0.85} />
       </mesh>
-      <mesh position={[0.45 + rand.a * 0.2, 0.30, -0.20]} castShadow>
-        <sphereGeometry args={[0.42, 10, 8]} />
-        <meshStandardMaterial color={shade(tint, -10)} roughness={0.95} />
-      </mesh>
-      <mesh position={[-0.40, 0.32, 0.45 + rand.b * 0.2]} castShadow>
-        <sphereGeometry args={[0.38, 10, 8]} />
-        <meshStandardMaterial color={shade(tint, +10)} roughness={0.95} />
-      </mesh>
-      <mesh position={[-0.10 + rand.c * 0.3, 0.62, -0.45]} castShadow>
-        <sphereGeometry args={[0.30, 10, 8]} />
-        <meshStandardMaterial color={shade(tint, +6)} roughness={0.95} />
-      </mesh>
+      {/* dim power LED only when accent is set */}
       {accent && (
-        <>
-          <mesh position={[0.32 + rand.d * 0.2, 0.78, 0.10]}>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial color={accent} roughness={0.6} />
-          </mesh>
-          <mesh position={[-0.20, 0.74, 0.32]}>
-            <sphereGeometry args={[0.07, 8, 8]} />
-            <meshStandardMaterial color={accent} roughness={0.6} />
-          </mesh>
-        </>
+        <mesh position={[0.47, 0.45, 0.30]}>
+          <sphereGeometry args={[0.018, 8, 6]} />
+          <meshStandardMaterial color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={0.6} />
+        </mesh>
       )}
     </group>
   );
 }
 
-// Cheap shade helper — shifts an #rrggbb hex by a small lightness delta.
-function shade(hex: string, delta: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const adj = (v: number) => Math.max(0, Math.min(255, v + delta));
-  return '#' + [adj(r), adj(g), adj(b)].map(v => v.toString(16).padStart(2, '0')).join('');
-}
-
-// ---------------- Cattail clump (pond edge)
+// ============================================================================
+// Mic stand (replaces Cattail) — vertical thin pole with a mic ball on top.
+// ============================================================================
 function Cattail({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       {[0, 1, 2, 3, 4].map(i => {
         const a = (i / 5) * Math.PI * 2;
-        const x = Math.cos(a) * 0.18;
-        const z = Math.sin(a) * 0.18;
+        const x = Math.cos(a) * 0.25;
+        const z = Math.sin(a) * 0.25;
         return (
           <group key={i} position={[x, 0, z]}>
-            <mesh position={[0, 0.55, 0]} castShadow>
-              <cylinderGeometry args={[0.02, 0.02, 1.1, 5]} />
-              <meshStandardMaterial color="#5a7a40" />
+            {/* pole */}
+            <mesh position={[0, 0.65, 0]} castShadow>
+              <cylinderGeometry args={[0.025, 0.025, 1.3, 6]} />
+              <meshStandardMaterial color="#2a2a32" metalness={0.5} roughness={0.4} />
             </mesh>
-            <mesh position={[0, 1.05, 0]} castShadow>
-              <cylinderGeometry args={[0.08, 0.06, 0.30, 8]} />
-              <meshStandardMaterial color="#5d4022" />
+            {/* mic ball */}
+            <mesh position={[0, 1.35, 0]} castShadow>
+              <sphereGeometry args={[0.08, 12, 10]} />
+              <meshStandardMaterial color="#1a1a22" metalness={0.6} roughness={0.35} />
+            </mesh>
+            {/* tip — barely lit warm-white indicator */}
+            <mesh position={[0, 1.42, 0]}>
+              <sphereGeometry args={[0.025, 8, 8]} />
+              <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.50} />
             </mesh>
           </group>
         );
@@ -332,139 +403,153 @@ function Cattail({ position }: { position: [number, number, number] }) {
   );
 }
 
-// ---------------- Flower patch ----------
-function FlowerPatch({ position, color, n = 10 }: { position: [number, number, number]; color: string; n?: number }) {
+// ============================================================================
+// Floor scuff (replaces FlowerPatch) — dark paint marks on the dance floor.
+// No emission. Reads as worn-in club floor scuffs / chewing gum / tape marks
+// rather than glowing decoration. Mostly invisible until lit by spotlights.
+// ============================================================================
+function FlowerPatch({ position, n = 10 }: { position: [number, number, number]; color?: string; n?: number }) {
   const blossoms = useMemo(() => {
     const rand = seeded(position[0] * 31 + position[2] * 19 + 7);
     return Array.from({ length: n }, () => ({
-      x: (rand() - 0.5) * 1.4,
-      z: (rand() - 0.5) * 1.4,
-      s: 0.06 + rand() * 0.10,
+      x: (rand() - 0.5) * 1.8,
+      z: (rand() - 0.5) * 1.8,
+      s: 0.06 + rand() * 0.09,
+      tone: 0.05 + rand() * 0.08,
     }));
   }, [position, n]);
   return (
     <group position={position}>
-      {blossoms.map((b, i) => (
-        <mesh key={i} position={[b.x, 0.05, b.z]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[b.s, 6]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} />
-        </mesh>
-      ))}
+      {blossoms.map((b, i) => {
+        const grey = `rgb(${Math.round(b.tone * 255)}, ${Math.round(b.tone * 255)}, ${Math.round(b.tone * 255 * 1.1)})`;
+        return (
+          <mesh key={i} position={[b.x, 0.04, b.z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[b.s, 8]} />
+            <meshStandardMaterial color={grey} roughness={0.95} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
 
-// ---------------- Barn (weathered wood, proper gable roof) ----
-// Walls: 7 wide (X) × 4 tall (Y) × 5 deep (Z). Roof is a gable along the long
-// axis: two slanted slate panels meeting at a ridge, with triangular gable
-// end-walls at +X and -X. No more rotated pyramid that didn't line up.
+// ============================================================================
+// DJ mainstage booth (replaces Barn) — raised stage with two turntables on a
+// central console, neon "DJ" banner, columnar speaker towers flanking it,
+// backlight LED bar. Same XY footprint as the barn so the scene composition
+// holds.
+// ============================================================================
 function Barn({ position }: { position: [number, number, number] }) {
-  const W = 7, H = 4, D = 5;             // wall dims
-  const RIDGE_RISE = 2.0;                // peak above wall top
-  const slope = Math.atan2(RIDGE_RISE, D / 2);
-  const panelLen = Math.hypot(D / 2, RIDGE_RISE);
-  const overhang = 0.25;
-
-  // Triangle gable shape (in shape XY plane). x = ±D/2 along the eave, y = up.
-  const gableShape = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(-D / 2, 0);
-    s.lineTo( D / 2, 0);
-    s.lineTo(    0, RIDGE_RISE);
-    s.lineTo(-D / 2, 0);
-    return s;
-  }, [D, RIDGE_RISE]);
-
+  const W = 7, H = 1.3, D = 4;
+  const consoleRef = useRef<THREE.MeshStandardMaterial>(null);
+  useFrame(({ clock }) => {
+    if (!consoleRef.current) return;
+    consoleRef.current.emissiveIntensity = 0.22 + Math.sin(clock.getElapsedTime() * 1.4) * 0.08;
+  });
   return (
     <group position={position}>
-      {/* walls */}
-      <RoundedBox
-        args={[W, H, D]} radius={0.12} smoothness={3}
-        position={[0, H / 2, 0]} castShadow receiveShadow
-      >
-        <meshStandardMaterial color="#6e5a3e" roughness={0.95} />
+      {/* raised stage base */}
+      <RoundedBox args={[W + 2, H, D + 1]} radius={0.08} smoothness={3}
+                  position={[0, H / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color="#0a0a12" roughness={0.5} metalness={0.3} />
       </RoundedBox>
-
-      {/* gable end walls — close the triangular gap above the wall, both ends */}
-      <mesh position={[ W / 2 - 0.001, H, 0]} rotation={[0,  Math.PI / 2, 0]}>
-        <shapeGeometry args={[gableShape]} />
-        <meshStandardMaterial color="#6e5a3e" roughness={0.95} side={THREE.DoubleSide} />
+      {/* very faint front fascia strip — barely-there work-light hint */}
+      <mesh position={[0, H * 0.55, (D + 1) / 2 + 0.01]}>
+        <boxGeometry args={[W + 2, 0.10, 0.02]} />
+        <meshStandardMaterial color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={0.25} />
       </mesh>
-      <mesh position={[-W / 2 + 0.001, H, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <shapeGeometry args={[gableShape]} />
-        <meshStandardMaterial color="#6e5a3e" roughness={0.95} side={THREE.DoubleSide} />
+      {/* center console (the mixing desk) */}
+      <RoundedBox args={[3.2, 0.7, 1.4]} radius={0.08} smoothness={3}
+                  position={[0, H + 0.35, 0.2]} castShadow>
+        <meshStandardMaterial color="#15151c" roughness={0.6} metalness={0.4} />
+      </RoundedBox>
+      {/* mixer top with knobs glow */}
+      <mesh position={[0, H + 0.71, 0.2]}>
+        <boxGeometry args={[3.0, 0.04, 1.2]} />
+        <meshStandardMaterial ref={consoleRef} color="#1a1a22" emissive={DECOR.dimAmber} emissiveIntensity={0.25} />
       </mesh>
-
-      {/* roof — two slanted slate panels meeting along the ridge (X axis) */}
-      <mesh
-        position={[0, H + RIDGE_RISE / 2, -(D / 4)]}
-        rotation={[ slope, 0, 0]}
-        castShadow
-      >
-        <boxGeometry args={[W + overhang * 2, 0.18, panelLen + overhang * 2]} />
-        <meshStandardMaterial color="#3a3530" roughness={0.95} />
+      {/* two turntables flanking the mixer */}
+      {[-1.55, 1.55].map((x, i) => (
+        <group key={i} position={[x, H + 0.40, 0.2]}>
+          <mesh>
+            <cylinderGeometry args={[0.55, 0.55, 0.10, 32]} />
+            <meshStandardMaterial color="#0a0a10" roughness={0.4} metalness={0.5} />
+          </mesh>
+          {/* platter — gold metal disc */}
+          <mesh position={[0, 0.052, 0]}>
+            <cylinderGeometry args={[0.50, 0.50, 0.02, 32]} />
+            <meshStandardMaterial color="#3a2a18" metalness={0.85} roughness={0.2} />
+          </mesh>
+          {/* spindle dot — barely lit indicator */}
+          <mesh position={[0, 0.072, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.05, 12]} />
+            <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.30} />
+          </mesh>
+          {/* tonearm */}
+          <mesh position={[0.40, 0.10, -0.40]} rotation={[0, -0.4, 0]}>
+            <cylinderGeometry args={[0.015, 0.015, 0.55, 6]} />
+            <meshStandardMaterial color="#aaa6a0" metalness={0.7} roughness={0.3} />
+          </mesh>
+        </group>
+      ))}
+      {/* speaker stacks at the corners of the stage */}
+      {[[-W / 2 - 0.5, D / 2], [W / 2 + 0.5, D / 2]].map((p, i) => (
+        <group key={i} position={[p[0], H, p[1]]}>
+          <RoundedBox args={[1.2, 3.0, 1.2]} radius={0.06} smoothness={3}
+                      position={[0, 1.5, 0]} castShadow>
+            <meshStandardMaterial color="#0a0a10" roughness={0.6} metalness={0.25} />
+          </RoundedBox>
+          {/* drivers */}
+          {[2.5, 1.7, 0.9].map((y, j) => (
+            <mesh key={j} position={[0, y, 0.61]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.34, 0.34, 0.06, 24]} />
+              <meshStandardMaterial color="#1a1a22" />
+            </mesh>
+          ))}
+          {/* faint side LED */}
+          <mesh position={[0.61, 1.5, 0]}>
+            <boxGeometry args={[0.02, 2.6, 0.12]} />
+            <meshStandardMaterial color={i === 0 ? DECOR.coolWhite : DECOR.dimAmber} emissive={i === 0 ? DECOR.coolWhite : DECOR.dimAmber} emissiveIntensity={0.45} />
+          </mesh>
+        </group>
+      ))}
+      {/* back LED backdrop — a tall wide glowing strip behind the booth */}
+      <mesh position={[0, H + 2.2, -D / 2 - 0.45]}>
+        <boxGeometry args={[W + 3, 4.4, 0.10]} />
+        <meshStandardMaterial color="#0a0612" roughness={0.4} />
       </mesh>
-      <mesh
-        position={[0, H + RIDGE_RISE / 2,  (D / 4)]}
-        rotation={[-slope, 0, 0]}
-        castShadow
-      >
-        <boxGeometry args={[W + overhang * 2, 0.18, panelLen + overhang * 2]} />
-        <meshStandardMaterial color="#3a3530" roughness={0.95} />
+      {/* backdrop is just a dark wall — no neon stripes. The mainstage uses
+          the overhead ClubLights for atmosphere, not painted neon. */}
+      {/* truss bar above the backdrop */}
+      <mesh position={[0, H + 4.65, -D / 2 - 0.20]}>
+        <boxGeometry args={[W + 3.4, 0.18, 0.18]} />
+        <meshStandardMaterial color="#1a1a22" metalness={0.5} roughness={0.4} />
       </mesh>
-
-      {/* ridge cap — slim long box along the peak */}
-      <mesh position={[0, H + RIDGE_RISE + 0.06, 0]} castShadow>
-        <boxGeometry args={[W + overhang * 2, 0.12, 0.34]} />
-        <meshStandardMaterial color="#2a2620" />
-      </mesh>
-
-      {/* big front door — dark walnut */}
-      <mesh position={[0, 1.4, D / 2 + 0.06]} castShadow>
-        <boxGeometry args={[2.4, 2.8, 0.1]} />
-        <meshStandardMaterial color="#3a2a1c" roughness={0.95} />
-      </mesh>
-
-      {/* hayloft window in the front gable */}
-      <mesh position={[0, H + RIDGE_RISE * 0.4, 0.001]} rotation={[0, 0, 0]}>
-        {/* but actually the front gable is at +X, so put the window there */}
-      </mesh>
-      <mesh position={[W / 2 + 0.05, H + RIDGE_RISE * 0.3, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <boxGeometry args={[0.9, 0.9, 0.05]} />
-        <meshStandardMaterial color="#3a2a1c" />
-      </mesh>
-
-      {/* eave trim — cream beam tucked under the slopes (low-sat, neutral) */}
-      <mesh position={[0, H, -D / 2]} castShadow>
-        <boxGeometry args={[W + overhang * 2, 0.18, 0.16]} />
-        <meshStandardMaterial color="#d6cda8" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, H,  D / 2]} castShadow>
-        <boxGeometry args={[W + overhang * 2, 0.18, 0.16]} />
-        <meshStandardMaterial color="#d6cda8" roughness={0.9} />
-      </mesh>
-
-      {/* vertical plank shadows on the front face */}
-      {[-2.4, -1.2, 1.2, 2.4].map((px, i) => (
-        <mesh key={i} position={[px, H / 2, D / 2 + 0.001]}>
-          <boxGeometry args={[0.04, H - 0.2, 0.04]} />
-          <meshStandardMaterial color="#4d3a25" />
-        </mesh>
+      {/* moving heads hanging off the truss */}
+      {[-2.5, 0, 2.5].map((x, i) => (
+        <group key={i} position={[x, H + 4.4, -D / 2 - 0.20]}>
+          <mesh>
+            <cylinderGeometry args={[0.12, 0.16, 0.25, 12]} />
+            <meshStandardMaterial color="#1a1a22" metalness={0.6} />
+          </mesh>
+          <mesh position={[0, -0.15, 0]}>
+            <coneGeometry args={[0.16, 0.20, 12]} />
+            <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={1.5} />
+          </mesh>
+        </group>
       ))}
     </group>
   );
 }
 
-// ---------------- Wooden post fence (just posts) -----------
-// No rails. Boundary path is shaped by a noise function so the overall outline
-// is an irregular blob — not a circle. Posts vary in height, thickness, tilt,
-// rotation, and spacing. Some sections are tightly packed, some have wide gaps
-// (open to the meadow). One section near the gates is intentionally sparse so
-// it doesn't visually wall off the pens.
+// ============================================================================
+// Steel barrier (replaces wooden post fence) — same noise-shaped boundary
+// generator, just matte black metal posts with hot-pink top caps and a thin
+// horizontal belt strip connecting adjacent posts.
+// ============================================================================
 function PostFence({ baseRadius }: { baseRadius: number }) {
   const posts = useMemo(() => {
     const rand = seeded(8124);
-    // Noise: layered sines for an organic non-circular outline.
     const noiseR = (a: number) =>
       baseRadius
       + 1.6 * Math.sin(a * 1.4 + 0.3)
@@ -472,93 +557,109 @@ function PostFence({ baseRadius }: { baseRadius: number }) {
       + 0.7 * Math.sin(a * 4.1 + 2.0)
       - 0.5 * Math.cos(a * 0.9);
 
-    // Walk around the circle. Spacing is variable (0.9 to 1.8 units between
-    // posts). Some intervals get skipped entirely to leave open "gaps".
-    const arr: { x: number; z: number; h: number; thick: number; tiltX: number; tiltZ: number; rotY: number; tint: number; isBroken: boolean }[] = [];
+    const arr: { x: number; z: number; h: number; thick: number; rotY: number; isBroken: boolean }[] = [];
     let a = 0;
     let safety = 0;
     while (a < Math.PI * 2 - 0.02 && safety++ < 600) {
       const r = noiseR(a);
-      // skip the gate lane window (so the pens read clearly)
       const x = Math.cos(a) * r;
-      const z = Math.sin(a) * r - 1.5; // shift fence shape south a touch
+      const z = Math.sin(a) * r - 1.5;
       const inGateLane = z < -10 && Math.abs(x) < 13;
-      // chance of leaving an organic gap (open boundary)
       const gapRoll = rand();
-      const shouldGap = gapRoll < 0.06 && a > 0.5; // ~6% gaps
+      const shouldGap = gapRoll < 0.06 && a > 0.5;
       if (!inGateLane && !shouldGap) {
-        const jx = (rand() - 0.5) * 0.6;
-        const jz = (rand() - 0.5) * 0.6;
-        // Mix three height archetypes so the silhouette feels really uneven.
-        // 25% "marker" stakes: very tall and thin
-        // 35% medium posts
-        // 25% chunky low fence posts
-        // 15% stubs / weathered nubs
+        const jx = (rand() - 0.5) * 0.4;
+        const jz = (rand() - 0.5) * 0.4;
+        // Barrier posts are more uniform than wooden fence posts — clubs have
+        // identical crowd-control stanchions, not weathered wood. Still vary
+        // the height slightly so the silhouette isn't dead-flat.
         const archetype = rand();
         let h: number, thick: number;
-        if (archetype < 0.25) {
-          h     = 1.90 + rand() * 0.85;   // 1.90..2.75
-          thick = 0.045 + rand() * 0.04;  // 0.045..0.085 — slim markers
-        } else if (archetype < 0.60) {
-          h     = 1.10 + rand() * 0.70;   // 1.10..1.80
-          thick = 0.10 + rand() * 0.06;
-        } else if (archetype < 0.85) {
-          h     = 0.55 + rand() * 0.50;   // 0.55..1.05 — chunky low posts
-          thick = 0.18 + rand() * 0.10;   // 0.18..0.28 — fat
+        if (archetype < 0.85) {
+          h     = 0.95 + rand() * 0.20;   // 0.95..1.15 — standard stanchion
+          thick = 0.07 + rand() * 0.02;
         } else {
-          h     = 0.20 + rand() * 0.25;   // 0.20..0.45 — weathered stubs
-          thick = 0.20 + rand() * 0.12;   // wide and squat
+          h     = 1.10 + rand() * 0.20;   // 1.10..1.30 — tall marker
+          thick = 0.06 + rand() * 0.02;
         }
         arr.push({
           x: x + jx,
           z: z + jz,
           h,
           thick,
-          tiltX: (rand() - 0.5) * 0.26,
-          tiltZ: (rand() - 0.5) * 0.26,
           rotY: rand() * Math.PI * 2,
-          tint: Math.floor(rand() * 4),
-          isBroken: rand() < 0.07,
+          isBroken: rand() < 0.04,
         });
       } else if (shouldGap) {
-        a += 0.35 + rand() * 0.45;                       // skip ahead a chunk
+        a += 0.35 + rand() * 0.45;
         continue;
       }
-      // variable spacing — measure along the noisy path tangentially
-      const step = (0.05 + rand() * 0.07);
+      const step = (0.06 + rand() * 0.05);
       a += step;
     }
     return arr;
   }, [baseRadius]);
 
-  const tints = ['#7e5b32', '#6c4d28', '#8a6840', '#5e4220'];
+  // belt segments connecting consecutive posts
+  const belts = useMemo(() => {
+    const out: { x: number; z: number; len: number; rot: number; h: number }[] = [];
+    for (let i = 0; i < posts.length - 1; i++) {
+      const a = posts[i], b = posts[i + 1];
+      const dx = b.x - a.x, dz = b.z - a.z;
+      const len = Math.hypot(dx, dz);
+      if (len > 2.2) continue; // too far apart — belt doesn't connect
+      out.push({
+        x: (a.x + b.x) / 2,
+        z: (a.z + b.z) / 2,
+        len,
+        rot: Math.atan2(dz, dx),
+        h: Math.min(a.h, b.h) * 0.82,
+      });
+    }
+    return out;
+  }, [posts]);
 
   return (
     <group>
       {posts.map((p, i) => (
-        <mesh
-          key={i}
-          position={[p.x, p.h / 2, p.z]}
-          rotation={[p.tiltX, p.rotY, p.tiltZ]}
-          castShadow
-        >
-          {p.isBroken ? (
-            // snapped post — leans more, top is conical
-            <coneGeometry args={[p.thick * 0.9, p.h * 0.85, 6]} />
-          ) : (
-            <cylinderGeometry args={[p.thick * 0.85, p.thick, p.h, 6]} />
+        <group key={i} position={[p.x, 0, p.z]} rotation={[0, p.rotY, 0]}>
+          {/* post body — matte black steel */}
+          <mesh position={[0, p.h / 2, 0]} castShadow>
+            <cylinderGeometry args={[p.thick * 0.85, p.thick, p.h, 8]} />
+            <meshStandardMaterial color="#1a1a22" metalness={0.6} roughness={0.35} />
+          </mesh>
+          {/* top cap — hot-pink puck */}
+          {!p.isBroken && (
+            <mesh position={[0, p.h + 0.045, 0]} castShadow>
+              <cylinderGeometry args={[p.thick * 1.4, p.thick * 1.4, 0.09, 12]} />
+              <meshStandardMaterial color={DECOR.dimAmber} emissive={DECOR.dimAmber} emissiveIntensity={1.4} />
+            </mesh>
           )}
-          <meshStandardMaterial color={tints[p.tint]} roughness={0.98} />
+        </group>
+      ))}
+      {belts.map((b, i) => (
+        <mesh
+          key={`belt_${i}`}
+          position={[b.x, b.h, b.z]}
+          rotation={[0, -b.rot, 0]}
+        >
+          <boxGeometry args={[b.len, 0.04, 0.015]} />
+          <meshStandardMaterial color="#2a2a30" roughness={0.5} metalness={0.4} />
         </mesh>
       ))}
     </group>
   );
 }
 
-// ---------------- Birds ------------------
+// ============================================================================
+// Drones (replaces birds) — small dark boxes with a red blinking light, orbit
+// high above the dance floor.
+// ============================================================================
 function Birds() {
   const a = useRef<THREE.Group>(null);
   const b = useRef<THREE.Group>(null);
+  const matA = useRef<THREE.MeshStandardMaterial>(null);
+  const matB = useRef<THREE.MeshStandardMaterial>(null);
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (a.current) {
@@ -569,33 +670,50 @@ function Birds() {
       b.current.position.set(Math.cos(t * 0.13 + 2) * 16, 13 + Math.sin(t * 0.6) * 0.6, Math.sin(t * 0.13 + 2) * 16);
       b.current.rotation.y = t * 0.13 + 2 + Math.PI / 2;
     }
+    // blink red lights
+    const blink = (Math.sin(t * 5) + 1) * 0.5;
+    if (matA.current) matA.current.emissiveIntensity = blink * 2.5;
+    if (matB.current) matB.current.emissiveIntensity = ((Math.sin(t * 5 + 1.7) + 1) * 0.5) * 2.5;
   });
-  const Bird = () => (
+  const Drone = ({ matRef }: { matRef: React.MutableRefObject<THREE.MeshStandardMaterial | null> }) => (
     <group>
-      <mesh>
-        <coneGeometry args={[0.12, 0.5, 4]} />
-        <meshStandardMaterial color="#2a2a2a" />
-      </mesh>
-      {/* wings — two flat triangles */}
-      <mesh position={[0.35, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <coneGeometry args={[0.10, 0.6, 3]} />
-        <meshStandardMaterial color="#1a1a1a" side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[-0.35, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.10, 0.6, 3]} />
-        <meshStandardMaterial color="#1a1a1a" side={THREE.DoubleSide} />
+      {/* body */}
+      <RoundedBox args={[0.42, 0.10, 0.42]} radius={0.04} smoothness={3}>
+        <meshStandardMaterial color="#0a0a10" metalness={0.4} roughness={0.5} />
+      </RoundedBox>
+      {/* arms with rotors */}
+      {([[-0.30, -0.30], [0.30, -0.30], [-0.30, 0.30], [0.30, 0.30]] as const).map(([x, z], i) => (
+        <group key={i} position={[x, 0, z]}>
+          <mesh>
+            <cylinderGeometry args={[0.02, 0.02, 0.08, 6]} />
+            <meshStandardMaterial color="#1a1a22" />
+          </mesh>
+          <mesh position={[0, 0.05, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.005, 12]} />
+            <meshStandardMaterial color="#1a1a22" transparent opacity={0.4} />
+          </mesh>
+        </group>
+      ))}
+      {/* belly red blink */}
+      <mesh position={[0, -0.08, 0]}>
+        <sphereGeometry args={[0.06, 10, 8]} />
+        <meshStandardMaterial ref={matRef} color="#ff2030" emissive="#ff2030" emissiveIntensity={2.0} />
       </mesh>
     </group>
   );
   return (
     <>
-      <group ref={a}><Bird /></group>
-      <group ref={b}><Bird /></group>
+      <group ref={a}><Drone matRef={matA} /></group>
+      <group ref={b}><Drone matRef={matB} /></group>
     </>
   );
 }
 
-// ---------------- Pollen / dandelion -----
+// ============================================================================
+// Floating music notes / sparkles (replaces pollen) — simple points retinted
+// so the "dust in the air" reads as light-show particulate rising from the
+// crowd.
+// ============================================================================
 function Pollen() {
   const COUNT = 120;
   const ref = useRef<THREE.Points>(null);
@@ -611,8 +729,8 @@ function Pollen() {
   const velocities = useMemo(() => {
     const arr = new Float32Array(COUNT * 2);
     for (let i = 0; i < COUNT; i++) {
-      arr[i * 2 + 0] = 0.3 + Math.random() * 0.4;   // rise speed (slow upward drift)
-      arr[i * 2 + 1] = (Math.random() - 0.5) * 0.4; // side drift
+      arr[i * 2 + 0] = 0.3 + Math.random() * 0.4;
+      arr[i * 2 + 1] = (Math.random() - 0.5) * 0.4;
     }
     return arr;
   }, []);
@@ -648,47 +766,43 @@ function Pollen() {
         />
       </bufferGeometry>
       <pointsMaterial
-        color="#fff8d0"
-        size={0.30}
+        color="#fff5dd"
+        size={0.22}
         sizeAttenuation
         transparent
-        opacity={0.85}
+        opacity={0.6}
         depthWrite={false}
       />
     </points>
   );
 }
 
-// ---------------- Combined export ----------
-// Hand-composed pasture with named zones. Each zone has its own personality
-// instead of a uniform sprinkle of trees + bushes. Zones overlap a bit but
-// stay biased: lots of trees in the WEST grove, very few in the SE meadow,
-// hay bales clustered in the SW barnyard, etc.
-//
-//   N (z = -18..-15)  → Gate plaza: clean approach to the pens, 1 lone oak.
-//   NE (x>0, z<-3)    → Sparse meadow + flower patch + a couple of birches.
-//   E (x = +5..+12)   → Pond cluster: cattails, lily pads, 1 oak by the bank.
-//   SE (x>0, z>4)     → Rocky outcrop: boulders + scattered tall pines.
-//   S (-4<x<4, z>4)   → Open meadow: dirt path + flowers + 1 stump.
-//   SW (x<-2, z>3)    → Barnyard: hay bales clustered, fence posts denser here.
-//   W (x<-6, |z|<8)   → Deep grove: heavy pine + oak cluster, dark canopy.
-//   NW (x<-3, z<-3)   → Wildflower thicket: birches + flowering bushes.
+// ============================================================================
+// Combined export — zone composition mirrors the Piper pasture so the spatial
+// choreography survives. Only the primitives draw differently.
+// ============================================================================
 export function SceneProps() {
   const groves = useMemo(() => buildGroves(), []);
 
   return (
     <>
-      {/* approach path */}
-      <mesh position={[-1.2, 0.01, -2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      {/* runway lanes — flat concrete, no glow. Just a slightly different tile
+          tone so they read as "lanes." Gates own all the color signal. */}
+      <mesh position={[-1.2, 0.04, -2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[1.6, 22]} />
-        <meshStandardMaterial color="#a8895e" roughness={1} />
+        <meshStandardMaterial color="#1a1426" roughness={0.85} />
       </mesh>
-      <mesh position={[ 1.2, 0.01, -2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[ 1.2, 0.04, -2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[1.6, 22]} />
-        <meshStandardMaterial color="#a8895e" roughness={1} />
+        <meshStandardMaterial color="#1a1426" roughness={0.85} />
+      </mesh>
+      {/* faint white center seam — like a painted floor line */}
+      <mesh position={[0, 0.05, -2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.06, 22]} />
+        <meshStandardMaterial color={DECOR.warmWhite} emissive={DECOR.warmWhite} emissiveIntensity={0.30} />
       </mesh>
 
-      <Pond position={[7, 0, -2]} radius={3.0} />
+      <VipPlatform position={[7, 0, -2]} radius={3.0} />
       {([
         [ 4.0, 0,  -2.0], [ 5.0, 0,   0.8], [ 9.5, 0,  -3.4],
         [ 7.6, 0,  -4.8], [ 4.4, 0,  -0.4], [ 9.6, 0,  -0.6],
@@ -724,9 +838,9 @@ export function SceneProps() {
   );
 }
 
-// Hand-tuned zone composition. Returns one entry per object — call site does
-// the rendering. Each zone is grouped so dense regions actually look dense,
-// and open regions stay open.
+// Hand-tuned zone composition (unchanged from Piper — spatial layout is the
+// hard part and works as-is). The legacy color/accent values are remapped to
+// neon inside Bush/FlowerPatch.
 function buildGroves() {
   const rand = seeded(901322);
   const trees: { type: 'oak' | 'pine' | 'birch'; p: [number, number, number]; s: number; rot: number }[] = [];
@@ -736,14 +850,10 @@ function buildGroves() {
   const boulders: { p: [number, number, number]; s: number }[] = [];
   const hay: { p: [number, number, number]; rot: number }[] = [];
 
-  // helpers ---------------------------------------------------------------
   const jit = (n: number) => (rand() - 0.5) * 2 * n;
-  function addCluster(cx: number, cz: number, radius: number, items: Array<() => void>) {
-    // run each placement function — items themselves call addX with offsets
+  function addCluster(_cx: number, _cz: number, _radius: number, items: Array<() => void>) {
     for (const fn of items) fn();
-    void cx; void cz; void radius; // (kept for documentation of cluster anchor)
   }
-
   function addTree(type: 'oak' | 'pine' | 'birch', x: number, z: number, s: number) {
     trees.push({ type, p: [x, 0, z], s, rot: rand() * Math.PI * 2 });
   }
@@ -763,15 +873,13 @@ function buildGroves() {
     hay.push({ p: [x, 0, z], rot });
   }
 
-  // Decorative palette — kept STRICTLY out of the dye palette so the saturated
-  // dye colors are reserved for gameplay signals only (sheep marks, gate banners).
-  const SAGE = FOLIAGE.bushGreen;       // four green tones
-  const CREAM = '#e8dcb2';              // pale cream wildflower
-  const LAVENDER = '#b9a3c4';           // dusty lavender (low sat)
-  const ROSE = '#c98a8a';               // dusty old rose (NOT dye red)
+  // legacy zone palette tokens — Bush/FlowerPatch remap these onto neon
+  const SAGE = ['#4e6240', '#5d7548', '#3f5234', '#6b8156'];
+  const CREAM = '#e8dcb2';
+  const LAVENDER = '#b9a3c4';
+  const ROSE = '#c98a8a';
   const sageRand = () => SAGE[Math.floor(rand() * SAGE.length)];
 
-  // ---- W: Deep grove ----------------------------------------------------
   addCluster(-14, 0, 6, [
     () => addTree('pine', -15.5 + jit(0.5), -2 + jit(1.0), 1.30),
     () => addTree('pine', -16.2 + jit(0.6), -5 + jit(1.0), 1.40),
@@ -789,7 +897,6 @@ function buildGroves() {
     () => addStump(-10, -1),
   ]);
 
-  // ---- NW: Wildflower thicket -------------------------------------------
   addCluster(-9, -8, 5, [
     () => addTree('birch', -8.5 + jit(0.4), -8 + jit(0.6), 1.05),
     () => addTree('birch', -10.5 + jit(0.4), -10 + jit(0.6), 0.95),
@@ -801,11 +908,9 @@ function buildGroves() {
     () => addFlower(-7.5, -10, LAVENDER, 10),
   ]);
 
-  // ---- N: Gate plaza ----------------------------------------------------
   addTree('oak', 5, -12, 1.30);
   addBush(-4.5, -11.5, 0.9, sageRand());
 
-  // ---- NE: Sparse meadow ------------------------------------------------
   addCluster(8, -8, 4, [
     () => addTree('birch', 8 + jit(0.3), -8 + jit(0.5), 1.00),
     () => addTree('birch', 11 + jit(0.3), -9 + jit(0.5), 0.95),
@@ -814,7 +919,6 @@ function buildGroves() {
     () => addBush(9 + jit(0.3), -9 + jit(0.4), 0.8, sageRand()),
   ]);
 
-  // ---- SE: Rocky outcrop ------------------------------------------------
   addCluster(11, 6, 5, [
     () => addBoulder(12, 5, 1.10),
     () => addBoulder(13, 7, 0.85),
@@ -826,14 +930,12 @@ function buildGroves() {
     () => addBush(11.5 + jit(0.3), 5 + jit(0.3), 0.75, sageRand()),
   ]);
 
-  // ---- S: Open meadow + path ------------------------------------------
   addStump(-4, 8);
   addFlower(4, 10, CREAM, 14);
   addFlower(-3, 12, LAVENDER, 10);
   addBush(3 + jit(0.4), 13 + jit(0.4), 0.85, sageRand());
   addTree('oak', -6, 12, 1.20);
 
-  // ---- SW: Barnyard ----------------------------------------------------
   addCluster(-9, 5, 4, [
     () => addHay(-9, 5, 0.4),
     () => addHay(-7.5, 4, 1.2),
@@ -846,13 +948,11 @@ function buildGroves() {
     () => addBush(-6 + jit(0.3), 5 + jit(0.3), 0.75, sageRand()),
   ]);
 
-  // ---- E: Pond fringe + a couple of trees ------------------------------
   addTree('oak', 9, 2, 1.20);
   addBush(4.5, -1, 0.7, sageRand());
   addBush(10, -5, 0.85, sageRand());
   addFlower(8, -6, CREAM, 10);
 
-  // ---- Outer-rim forest patches (clusters, not a uniform ring) ---------
   for (const patch of [
     { cx: -16, cz: -13, a: ['oak', 'pine', 'birch'] as const },
     { cx:  -3, cz: -17, a: ['oak', 'oak', 'pine'] as const },

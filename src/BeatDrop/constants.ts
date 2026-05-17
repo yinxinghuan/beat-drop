@@ -57,13 +57,13 @@ export const CAMERA_POS: [number, number, number] = [0, 22, 9.4];
 export const CAMERA_FOV = 50;
 
 export const DYE_PALETTE = [
-  '#d8453e', // red
-  '#3d7ad2', // blue
-  '#e8c54a', // yellow
-  '#4faa5b', // green
+  '#ff3ea5', // hot pink
+  '#38e6ff', // cyan
+  '#ffd84a', // amber
+  '#6dff7a', // lime
 ];
 
-export const DYE_NAME = ['Red', 'Blue', 'Yellow', 'Green'];
+export const DYE_NAME = ['Pink', 'Cyan', 'Amber', 'Lime'];
 
 export type NpcBehavior = 'static' | 'wander' | 'flock';
 export const DEFAULT_BEHAVIOR: NpcBehavior = 'wander';

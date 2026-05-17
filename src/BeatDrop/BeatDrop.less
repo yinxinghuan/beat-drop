@@ -1,9 +1,9 @@
-.pp {
+.bd {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(120% 60% at 50% 100%, #6c9e62 0%, #2f5a39 50%, #142214 100%);
+  background: radial-gradient(120% 80% at 50% 100%, #2a1248 0%, #14081f 50%, #06060c 100%);
   overflow: hidden;
   color: #f6efdc;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -70,17 +70,17 @@
     font-family: 'Baloo 2', sans-serif;
     font-weight: 800;
     line-height: 1;
-    background: linear-gradient(135deg, rgba(255, 200, 80, .35), rgba(255, 130, 60, .25));
-    border: 1px solid rgba(255, 200, 80, .45);
-    color: #ffe17a;
-    box-shadow: 0 0 14px rgba(255, 200, 80, .28);
+    background: linear-gradient(135deg, rgba(56, 230, 255, .30), rgba(255, 62, 165, .22));
+    border: 1px solid rgba(56, 230, 255, .50);
+    color: #38e6ff;
+    box-shadow: 0 0 14px rgba(56, 230, 255, .32);
     animation: bd-combo-pop .35s ease-out;
   }
   &__combo-float--m3 {
-    color: #ff9844;
-    background: linear-gradient(135deg, rgba(255, 100, 50, .35), rgba(255, 60, 40, .25));
-    border-color: rgba(255, 120, 60, .55);
-    box-shadow: 0 0 18px rgba(255, 120, 60, .45);
+    color: #ff3ea5;
+    background: linear-gradient(135deg, rgba(255, 62, 165, .35), rgba(199, 80, 255, .25));
+    border-color: rgba(255, 62, 165, .55);
+    box-shadow: 0 0 18px rgba(255, 62, 165, .50);
   }
   &__combo-x { font-size: 14px; opacity: .85; }
   &__combo-n { font-size: 22px; }
@@ -183,29 +183,31 @@
     bottom: calc(env(safe-area-inset-bottom, 16px) + 16px);
     z-index: 10;
     pointer-events: auto;
-    width: 84px;
-    height: 84px;
+    width: 92px;
+    height: 92px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(180deg, rgba(28, 48, 28, .85), rgba(16, 28, 16, .85));
-    color: #f4ecd8;
+    background: linear-gradient(180deg, rgba(20, 14, 30, .92), rgba(8, 6, 18, .92));
+    color: #ffffff;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow:
-      0 12px 28px rgba(0, 0, 0, .45),
-      inset 0 1px 0 rgba(255, 255, 255, .12);
+      0 12px 28px rgba(0, 0, 0, .55),
+      inset 0 1px 0 rgba(255, 255, 255, .10);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform .12s ease;
-    opacity: .7;
+    opacity: .72;
   }
   &__bark--ready {
     opacity: 1;
+    background: linear-gradient(180deg, rgba(45, 12, 60, .95), rgba(12, 6, 24, .95));
     box-shadow:
-      0 16px 32px rgba(255, 200, 80, .35),
-      inset 0 1px 0 rgba(255, 255, 255, .14);
+      0 16px 32px rgba(255, 62, 165, .45),
+      0 0 18px rgba(56, 230, 255, .35),
+      inset 0 1px 0 rgba(255, 255, 255, .18);
     animation: bd-bark-pulse 1.4s ease-in-out infinite;
   }
   &__bark:active { transform: scale(.94); }
@@ -220,23 +222,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    color: #ffe17a;
+    gap: 3px;
+    color: #ffffff;
   }
   &__bark-icon {
     width: 32px;
     height: 24px;
-    color: #ffe17a;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+    color: #ffffff;
+    filter: drop-shadow(0 0 6px rgba(56, 230, 255, .55));
   }
   &__bark-text {
     font-family: 'Baloo 2', sans-serif;
     font-weight: 800;
-    font-size: 17px;
-    letter-spacing: .06em;
-    color: #ffe17a;
+    font-size: 11.5px;
+    letter-spacing: .14em;
+    color: #ffffff;
     line-height: 1;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, .55);
+    text-shadow: 0 0 8px rgba(56, 230, 255, .55), 0 2px 4px rgba(0, 0, 0, .55);
   }
   // Expanding rings emitted from the button when the bark fires (CSS only).
   &__bark-rings {
@@ -249,7 +251,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 3px solid #ffe17a;
+    border: 3px solid #38e6ff;
     opacity: 0;
     will-change: transform, opacity;
   }
@@ -258,7 +260,7 @@
   }
   &__bark-ring2 {
     animation: bd-bark-ring .65s cubic-bezier(.22, .61, .36, 1) .14s forwards;
-    border-color: #fff5c0;
+    border-color: #ff3ea5;
   }
   // The button itself also kicks slightly each fire to confirm the tap.
   &__bark:active &__bark-inner {
@@ -301,8 +303,9 @@
   &__wolf-flash {
     position: absolute;
     inset: 0;
-    background: radial-gradient(60% 60% at 50% 50%, rgba(255, 70, 50, .35) 0%, rgba(255, 70, 50, 0) 75%);
-    animation: bd-wolf-flash .5s ease-out forwards;
+    background: radial-gradient(70% 70% at 50% 50%, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, 0) 75%);
+    animation: bd-wolf-flash .42s ease-out forwards;
+    mix-blend-mode: screen;
   }
   &__wolf-pellet {
     position: absolute;
@@ -312,8 +315,8 @@
     display: flex;
     align-items: baseline;
     gap: 4px;
-    color: #ff7a55;
-    text-shadow: 0 4px 18px rgba(255, 80, 50, .7);
+    color: #ffffff;
+    text-shadow: 0 0 22px rgba(255, 255, 255, .85), 0 4px 18px rgba(180, 200, 255, .55);
     animation: bd-wolf-pellet 1.4s cubic-bezier(.22, .61, .36, 1) forwards;
     font-weight: 800;
   }
@@ -452,9 +455,9 @@
   100% { transform: scale(1); }
 }
 @keyframes bd-bark-pulse {
-  0%   { box-shadow: 0 16px 32px rgba(255, 200, 80, .35), inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 0 rgba(255, 200, 80, .35); }
-  60%  { box-shadow: 0 16px 32px rgba(255, 200, 80, .35), inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 14px rgba(255, 200, 80, 0); }
-  100% { box-shadow: 0 16px 32px rgba(255, 200, 80, .35), inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 0 rgba(255, 200, 80, 0); }
+  0%   { box-shadow: 0 16px 32px rgba(255, 62, 165, .45), 0 0 18px rgba(56, 230, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .18), 0 0 0 0 rgba(56, 230, 255, .55); }
+  60%  { box-shadow: 0 16px 32px rgba(255, 62, 165, .45), 0 0 18px rgba(56, 230, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .18), 0 0 0 14px rgba(56, 230, 255, 0); }
+  100% { box-shadow: 0 16px 32px rgba(255, 62, 165, .45), 0 0 18px rgba(56, 230, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .18), 0 0 0 0 rgba(56, 230, 255, 0); }
 }
 @keyframes bd-wolf-flash {
   0%   { opacity: 1; }

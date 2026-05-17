@@ -9,3 +9,4 @@ vite.config.js
 
 # working screenshots from Chrome DevTools MCP during iteration
 screenshot-*.png
+_qa/

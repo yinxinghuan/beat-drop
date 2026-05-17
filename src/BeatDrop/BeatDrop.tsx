@@ -200,7 +200,7 @@ export function BeatDrop() {
   const barkPct = Math.min(1, Math.max(0, 1 - barkCooldown / BARK_COOLDOWN));
 
   return (
-    <div className="pp">
+    <div className="bd">
       {showCanvas && (
         <div className="bd__canvas">
           <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} frameloop={canvasFrameloop}>
@@ -264,10 +264,10 @@ export function BeatDrop() {
           data-no-joystick
         >
           <svg className="bd__bark-ring" viewBox="0 0 64 64" aria-hidden>
-            <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(255,240,200,.16)" strokeWidth="3" />
+            <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="3" />
             <circle
               cx="32" cy="32" r="29" fill="none"
-              stroke={barkReady ? '#ffd84a' : '#f4ecd8'} strokeWidth="3"
+              stroke={barkReady ? '#38e6ff' : '#ffffff'} strokeWidth="3"
               strokeDasharray={`${barkPct * 182.2} 182.2`}
               transform="rotate(-90 32 32)"
               strokeLinecap="round"
@@ -275,15 +275,18 @@ export function BeatDrop() {
           </svg>
           <span className="bd__bark-inner">
             <svg className="bd__bark-icon" viewBox="0 0 32 24" aria-hidden>
-              {/* dog head silhouette + radiating sound waves */}
-              <ellipse cx="11" cy="14" rx="7.5" ry="6" fill="currentColor" />
-              <polygon points="6,8 4,3.5 10,7" fill="currentColor" />
-              <polygon points="16,8 14,3.5 11,7" fill="currentColor" />
-              <circle cx="15" cy="15.5" r="1.1" fill="#1a1a1a" />
-              <path d="M21 8 Q24 12 21 16" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-              <path d="M24.5 5 Q29 12 24.5 19" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity=".7" />
+              {/* microphone — capsule head + grille lines + body + base ring +
+                  radiating sound waves on the right */}
+              <ellipse cx="11" cy="9" rx="6" ry="7" fill="currentColor" />
+              <line x1="6"  y1="7"  x2="16" y2="7"  stroke="#0a0a10" strokeWidth=".8" opacity=".5" />
+              <line x1="6"  y1="9"  x2="16" y2="9"  stroke="#0a0a10" strokeWidth=".8" opacity=".5" />
+              <line x1="6"  y1="11" x2="16" y2="11" stroke="#0a0a10" strokeWidth=".8" opacity=".5" />
+              <rect x="9.5" y="16" width="3" height="5" fill="currentColor" />
+              <rect x="7"   y="20" width="8" height="2" rx="1" fill="currentColor" />
+              <path d="M21 6 Q25 12 21 18" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              <path d="M24.5 3 Q30 12 24.5 21" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity=".7" />
             </svg>
-            <span className="bd__bark-text">BARK</span>
+            <span className="bd__bark-text">MIC DROP</span>
           </span>
           {/* expanding rings rendered on every fire */}
           {barkFire && (

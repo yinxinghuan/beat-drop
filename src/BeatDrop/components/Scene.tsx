@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAMERA_FOV, CAMERA_POS, PLAYFIELD } from '../constants';
-import { envForRound } from '../environment';
+import { envForRound, EnvironmentPreset } from '../environment';
 import { Sheep } from './Sheep';
 import { Dog } from './Dog';
 import { Gate } from './Gate';
@@ -26,6 +26,96 @@ interface SceneProps_ {
   onBarkUpdate: (cooldown: number) => void;
   playSfx: (k: SfxKey) => void;
   haptic?: (k: 'light' | 'heavy') => void;
+}
+
+// Overhead sweeping spotlights — the truss "moving heads" rendered as REAL
+// Three.js SpotLights. Each one orbits its target around a fixed center on
+// the dance floor so colored puddles of light sweep across the players. The
+// colors live close to the dye palette but stay slightly off (magenta-violet
+// vs dye pink, deep teal vs dye cyan) so they read as atmosphere rather than
+// gameplay signal. This is where the club's "energy" comes from now that the
+// static props are visually muted.
+function ClubLight({
+  color, height, radius, period, phase, angle = Math.PI / 7,
+}: {
+  color: string; height: number; radius: number; period: number; phase: number; angle?: number;
+}) {
+  const lightRef = useRef<THREE.SpotLight>(null);
+  const targetRef = useRef<THREE.Object3D>(null);
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    const a = (t / period) * Math.PI * 2 + phase;
+    if (targetRef.current) {
+      // sweep target around a circle on the floor — figure-8 mix so beams
+      // don't all rotate in unison
+      const x = Math.cos(a) * radius + Math.sin(a * 0.5) * radius * 0.3;
+      const z = Math.sin(a) * radius * 0.6 + Math.cos(a * 0.7) * radius * 0.5;
+      targetRef.current.position.set(x, 0, z);
+      targetRef.current.updateMatrixWorld(true);
+    }
+    if (lightRef.current && targetRef.current && lightRef.current.target !== targetRef.current) {
+      lightRef.current.target = targetRef.current;
+    }
+  });
+  return (
+    <>
+      <spotLight
+        ref={lightRef}
+        position={[0, height, 0]}
+        angle={angle}
+        penumbra={0.45}
+        intensity={70}
+        distance={height * 1.6}
+        decay={1.1}
+        color={color}
+      />
+      <object3D ref={targetRef} />
+    </>
+  );
+}
+
+function ClubLights() {
+  return (
+    <>
+      <ClubLight color="#c750ff" height={12} radius={10} period={9.0}  phase={0}            />
+      <ClubLight color="#2aa6ff" height={13} radius={11} period={11.5} phase={1.7}          />
+      <ClubLight color="#ff5a3a" height={12} radius={9}  period={8.5}  phase={Math.PI}      />
+      <ClubLight color="#7affa0" height={13} radius={10} period={12.0} phase={Math.PI / 2}  />
+    </>
+  );
+}
+
+// Directional light that subtly pulses when env.strobe — flicker amplitude
+// stays gentle (0.85↔1.15) to avoid epilepsy hazard. Frequency ~3 Hz.
+function StrobeDirectional({ env }: { env: EnvironmentPreset }) {
+  const ref = useRef<THREE.DirectionalLight>(null);
+  const base = env.directional.intensity;
+  useFrame(({ clock }) => {
+    const l = ref.current;
+    if (!l) return;
+    if (env.strobe) {
+      l.intensity = base * (1 + Math.sin(clock.getElapsedTime() * Math.PI * 2 * 3) * 0.15);
+    } else {
+      l.intensity = base;
+    }
+  });
+  return (
+    <directionalLight
+      ref={ref}
+      position={env.directional.position}
+      color={env.directional.color}
+      intensity={base}
+      castShadow
+      shadow-mapSize={[2048, 2048]}
+      shadow-camera-left={-30}
+      shadow-camera-right={30}
+      shadow-camera-top={30}
+      shadow-camera-bottom={-30}
+      shadow-camera-near={0.5}
+      shadow-camera-far={80}
+      shadow-bias={-0.0008}
+    />
+  );
 }
 
 function FollowCamera({ state }: { state: React.MutableRefObject<GameRef> }) {
@@ -215,21 +305,9 @@ export function Scene(props: SceneProps_) {
       <FollowCamera state={state} />
       <fog attach="fog" args={[env.fog.color, env.fog.near, env.fog.far]} />
       <ambientLight color={env.ambient.color} intensity={env.ambient.intensity} />
-      <directionalLight
-        position={env.directional.position}
-        color={env.directional.color}
-        intensity={env.directional.intensity}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-30}
-        shadow-camera-right={30}
-        shadow-camera-top={30}
-        shadow-camera-bottom={-30}
-        shadow-camera-near={0.5}
-        shadow-camera-far={80}
-        shadow-bias={-0.0008}
-      />
+      <StrobeDirectional env={env} />
       <hemisphereLight args={[env.hemisphere.sky, env.hemisphere.ground, env.hemisphere.intensity]} />
+      <ClubLights />
 
       {/* far background — env tinted */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
@@ -288,14 +366,14 @@ export function Scene(props: SceneProps_) {
       ))}
 
       <BarkWave state={state} />
-      {env.extra === 'fireflies' && <Fireflies />}
+      {env.extra === 'sparkles' && <Sparkles color={env.pollenColor} />}
       <ActorSync state={state} />
     </>
   );
 }
 
-// Glowing yellow-green points slowly drifting near the ground — night extra.
-function Fireflies() {
+// Drifting sparkles near the floor — STROBE / LASER extra. Color from preset.
+function Sparkles({ color }: { color: string }) {
   const COUNT = 60;
   const ref = useRef<THREE.Points>(null);
   const { positions, vel } = useMemo(() => {
@@ -343,11 +421,11 @@ function Fireflies() {
         />
       </bufferGeometry>
       <pointsMaterial
-        color="#fff19a"
-        size={0.32}
+        color={color}
+        size={0.34}
         sizeAttenuation
         transparent
-        opacity={0.65}
+        opacity={0.7}
         depthWrite={false}
       />
     </points>
