@@ -366,9 +366,74 @@ export function Scene(props: SceneProps_) {
       ))}
 
       <BarkWave state={state} />
+      {/* Always-on ambient fireflies — soft warm-yellow drifting motes that
+          give every preset a "candle-lit night" undertone, inspired by the
+          Pied Piper night mode. Per-preset sparkles/mist stack on top. */}
+      <Fireflies />
       {env.extra === 'sparkles' && <Sparkles color={env.pollenColor} />}
       <ActorSync state={state} />
     </>
+  );
+}
+
+// Slow-drifting warm-yellow motes scattered across the dance floor. Always
+// rendered, regardless of env preset, so the club never feels pitch-black.
+// Twinkle is sin-modulated so the swarm reads as alive.
+function Fireflies() {
+  const COUNT = 60;
+  const ref = useRef<THREE.Points>(null);
+  const { positions, vel } = useMemo(() => {
+    const positions = new Float32Array(COUNT * 3);
+    const vel = new Float32Array(COUNT * 3);
+    for (let i = 0; i < COUNT; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * PLAYFIELD * 1.1;
+      positions[i * 3 + 1] = 0.6 + Math.random() * 2.6;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * PLAYFIELD * 1.1;
+      vel[i * 3 + 0] = (Math.random() - 0.5) * 0.55;
+      vel[i * 3 + 1] = (Math.random() - 0.5) * 0.28;
+      vel[i * 3 + 2] = (Math.random() - 0.5) * 0.55;
+    }
+    return { positions, vel };
+  }, []);
+  useFrame(({ clock }, delta) => {
+    const p = ref.current;
+    if (!p) return;
+    const arr = p.geometry.attributes.position.array as Float32Array;
+    const c = Math.min(delta, 0.05);
+    const t = clock.getElapsedTime();
+    for (let i = 0; i < COUNT; i++) {
+      const xi = i * 3, yi = i * 3 + 1, zi = i * 3 + 2;
+      arr[xi] += vel[xi] * c + Math.sin(t * 0.7 + i) * 0.005;
+      arr[yi] += vel[yi] * c;
+      arr[zi] += vel[zi] * c + Math.cos(t * 0.6 + i * 1.3) * 0.005;
+      if (arr[yi] < 0.4 || arr[yi] > 3.2) vel[yi] *= -1;
+      if (Math.abs(arr[xi]) > PLAYFIELD * 0.55) vel[xi] *= -1;
+      if (Math.abs(arr[zi]) > PLAYFIELD * 0.55) vel[zi] *= -1;
+    }
+    p.geometry.attributes.position.needsUpdate = true;
+    const m = p.material as THREE.PointsMaterial;
+    m.opacity = 0.45 + Math.sin(t * 1.4) * 0.15;
+  });
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={COUNT}
+          array={positions}
+          itemSize={3}
+          args={[positions, 3]}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        color="#fff19a"
+        size={0.36}
+        sizeAttenuation
+        transparent
+        opacity={0.55}
+        depthWrite={false}
+      />
+    </points>
   );
 }
 

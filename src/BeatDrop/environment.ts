@@ -25,18 +25,18 @@ export const ENVIRONMENTS: EnvironmentPreset[] = [
   {
     id: 'warmup',
     name: 'WARM UP',
-    ambient: { color: '#ffb87a', intensity: 0.32 },
-    directional: { color: '#ff9a5a', intensity: 0.85, position: [14, 30, 8] },
-    hemisphere: { sky: '#5a2a3a', ground: '#120816', intensity: 0.28 },
+    ambient: { color: '#ffb87a', intensity: 0.55 },
+    directional: { color: '#ff9a5a', intensity: 1.05, position: [14, 30, 8] },
+    hemisphere: { sky: '#5a2a3a', ground: '#2a1822', intensity: 0.42 },
     fog: { color: '#1a0e1f', near: 30, far: 76 },
     pasture: {
-      outerBg:   '#08080f',
-      outerRing: '#11091a',
-      main:      '#241636',
-      inner:     '#2e1c44',
-      tuft:      '#4a2a5e', // amber-purple seam glow
+      outerBg:   '#0d0a16',
+      outerRing: '#16101f',
+      main:      '#2c1c40',
+      inner:     '#3a234e',
+      tuft:      '#5a3270', // amber-purple seam glow
     },
-    pollenColor: '#ffb670',
+    pollenColor: '#ffd8a0',
     extra: null,
   },
   {
@@ -77,15 +77,15 @@ export const ENVIRONMENTS: EnvironmentPreset[] = [
   {
     id: 'laser',
     name: 'LASER',
-    ambient: { color: '#1a2840', intensity: 0.28 },
-    directional: { color: '#ff3ea5', intensity: 1.35, position: [-22, 22, 12] },
-    hemisphere: { sky: '#38e6ff', ground: '#08080f', intensity: 0.6 },
-    fog: { color: '#08080f', near: 32, far: 78 },
+    ambient: { color: '#2a3a55', intensity: 0.48 },
+    directional: { color: '#ff3ea5', intensity: 1.45, position: [-22, 22, 12] },
+    hemisphere: { sky: '#38e6ff', ground: '#16182a', intensity: 0.7 },
+    fog: { color: '#0e1224', near: 32, far: 78 },
     pasture: {
-      outerBg:   '#06060c',
-      outerRing: '#0b0a1a',
-      main:      '#1c1230',
-      inner:     '#2a1648',
+      outerBg:   '#0a0a14',
+      outerRing: '#0f0e22',
+      main:      '#221638',
+      inner:     '#321a52',
       tuft:      '#cfe0f0', // cool-white grid seams (NOT dye cyan)
     },
     pollenColor: '#cfe0f0',
