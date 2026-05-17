@@ -12,7 +12,7 @@ export const DETACH_RADIUS = 9.0;
 export const DETACH_TIME = 2.8;
 
 // Round timing — scaled with round number in useGameLoop.
-export const BASE_ROUND_TIME = 70;       // seconds for round 1
+export const BASE_ROUND_TIME = 85;       // seconds for round 1
 export const ROUND_TIME_BONUS = 5;       // +N seconds per round, capped
 export const ROUND_TIME_CAP_INCS = 4;    // stops scaling after this many rounds
 export const CORRECT_SCORE = 10;
@@ -24,12 +24,15 @@ export const COLOR_TYPES = 4;
 export const TARGET_PER_GATE = 3;        // need 3 of each color → 6 deliveries per round
 
 // Field NPC counts per round, scaled with round number.
-export const NPC_BASE_COUNT = 18;        // round 1 — more dancers on the floor
-                                         // so each of the 4 dye colors averages
-                                         // ~4-5 spawns and TARGET_PER_GATE = 3
-                                         // is always achievable on RNG.
-export const NPC_PER_ROUND_BONUS = 2;    // +N per round, capped
-export const NPC_COUNT_CAP = 28;
+export const NPC_BASE_COUNT = 26;        // round 1 — packed dance floor so
+                                         // the player never has to hunt for
+                                         // target-color dancers
+export const NPC_PER_ROUND_BONUS = 3;    // +N per round, capped
+export const NPC_COUNT_CAP = 40;
+// When a dancer is delivered, refill the floor with a new random dancer
+// up to NPC_REFILL_TARGET so the round stays visually packed all the way
+// through. Set to 0 to disable refill.
+export const NPC_REFILL_TARGET = 24;
 
 // Wolves spawn count per round.
 export const WOLF_BASE_COUNT = 1;

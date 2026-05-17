@@ -4,7 +4,7 @@ import {
   PLAYFIELD, PLAYER_SPEED, SPEED_DECAY, MIN_SPEED_FACTOR, BODY_FOLLOW_SPEED,
   ATTRACT_RADIUS, DETACH_RADIUS, DETACH_TIME,
   CORRECT_SCORE, WRONG_SCORE, COMBO_MAX_MULT,
-  COLOR_TYPES, TARGET_PER_GATE,
+  COLOR_TYPES, TARGET_PER_GATE, NPC_REFILL_TARGET,
   GATE_RADIUS, GATE_OFFSET_Z, GATE_SPREAD_X,
   GRACE_PERIOD, DEFAULT_BEHAVIOR,
   WOLF_PROWL_SPEED, WOLF_CHASE_SPEED, WOLF_CHASE_TRIGGER,
@@ -120,16 +120,19 @@ function startRound(d: GameRef, round: number) {
     { id: 'right', position: new THREE.Vector3( GATE_SPREAD_X, 0, GATE_OFFSET_Z), color: rightColor, delivered: 0 },
   ];
 
-  // spawn sheep — guarantee at least TARGET_PER_GATE of each gate color, plus distractors.
+  // spawn dancers — guarantee an over-supply of target colors. With
+  // TARGET_PER_GATE=3 and minTargets=5 (extra cushion), the floor is
+  // GUARANTEED to have at least 5 of each gate color even before the
+  // distractor bias kicks in. Distractor bias is 75% toward target colors
+  // so the field skews heavily playable.
   const totalSheep = roundSheepCount(round);
-  const minTargets = TARGET_PER_GATE;
+  const minTargets = TARGET_PER_GATE + 2;
   for (let i = 0; i < minTargets; i++) d.sheep.push(makeSheep(leftColor, placeSheep()));
   for (let i = 0; i < minTargets; i++) d.sheep.push(makeSheep(rightColor, placeSheep()));
   const remaining = totalSheep - 2 * minTargets;
   for (let i = 0; i < remaining; i++) {
-    // distractors: bias toward target colors so the field doesn't feel sparse
     const r = Math.random();
-    const c = r < 0.55
+    const c = r < 0.75
       ? (Math.random() < 0.5 ? leftColor : rightColor)
       : Math.floor(Math.random() * COLOR_TYPES);
     d.sheep.push(makeSheep(c, placeSheep()));
@@ -461,6 +464,27 @@ export function useGameLoop(p: GameLoopParams) {
           if (sidx >= 0) d.sheep.splice(sidx, 1);
         }
       }
+    }
+
+    // ===== REFILL — keep the floor populated so late-round doesn't run dry.
+    // Spawn replacement dancers biased toward the current gate colors so
+    // the player can always find more targets. Cap at NPC_REFILL_TARGET.
+    while (NPC_REFILL_TARGET > 0 && d.sheep.length < NPC_REFILL_TARGET) {
+      const r = Math.random();
+      const left = d.gates[0]?.color ?? 0;
+      const right = d.gates[1]?.color ?? 1;
+      const c = r < 0.75
+        ? (Math.random() < 0.5 ? left : right)
+        : Math.floor(Math.random() * COLOR_TYPES);
+      // Spawn far from the player so a new dancer doesn't pop into their chain
+      let pos = placeSheep();
+      for (let tries = 0; tries < 6; tries++) {
+        const px = pos.x - d.headPos.x;
+        const pz = pos.z - d.headPos.z;
+        if (px * px + pz * pz > 36) break; // > 6u away
+        pos = placeSheep();
+      }
+      d.sheep.push(makeSheep(c, pos));
     }
 
     // ===== ROUND CLEAR / FAIL =====
