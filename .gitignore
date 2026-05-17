@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+*.log
+.env
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+
+# working screenshots from Chrome DevTools MCP during iteration
+screenshot-*.png

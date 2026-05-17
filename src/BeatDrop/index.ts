@@ -1,0 +1,1 @@
+export { BeatDrop } from './BeatDrop';
